@@ -26,126 +26,125 @@ function LandingPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="min-h-[85vh] flex items-center">
-        <div className="max-w-6xl mx-auto px-6 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center">
+      <section className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-24">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 gap-16 items-center px-10">
 
-            {/* Left Side */}
-            <div className="max-w-md space-y-6">
-              <h1 className="text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 leading-tight">
-                Prioritize What Matters
-              </h1>
+          {/* Left Side */}
+          <div className="max-w-lg">
+            <h1 className="text-5xl font-bold text-gray-900 leading-tight">
+              Prioritize What Matters
+            </h1>
 
-              <p className="text-lg text-gray-600 leading-relaxed">
-                Smart Inbox uses AI to prioritize your Gmail inbox so you can focus
-                on the messages that move the needle.
-              </p>
+            <p className="mt-6 text-lg text-gray-600 max-w-lg">
+              Smart Inbox uses AI to prioritize your Gmail inbox so you can focus
+              on the messages that move the needle.
+            </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                <Link
-                  to="/register"
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition duration-300 text-center"
-                >
-                  Get Started
-                </Link>
+            <div className="flex gap-4 mt-8">
+              <Link
+                to="/register"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium shadow-md hover:shadow-xl hover:scale-105 transition-all duration-200"
+              >
+                Get Started
+              </Link>
 
-                <Link
-                  to="/login"
-                  className="border-2 border-gray-300 text-gray-900 px-8 py-3 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition duration-300 text-center"
-                >
-                  Login
-                </Link>
-              </div>
+              <Link
+                to="/login"
+                className="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 hover:scale-105 transition-all duration-200"
+              >
+                Login
+              </Link>
             </div>
+          </div>
 
-            {/* Right Side */}
-            <div className="flex justify-center lg:justify-end">
-              <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm hover:shadow-2xl transition duration-300">
+          {/* Right Side */}
+          <div className="relative flex justify-center">
+            <div className="absolute w-72 h-72 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur-3xl opacity-30"></div>
 
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Live Example
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Your inbox with AI prioritization
-                  </p>
-                </div>
+            <div className="relative bg-white rounded-2xl shadow-xl p-6 w-[380px] hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-gray-900">
+                  Live Example
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Your inbox with AI prioritization
+                </p>
+              </div>
 
-                <div className="space-y-3">
-                  {emails.map((e) => (
-                    <div
-                      key={e.id}
-                      className="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-3 hover:bg-gray-100 transition cursor-pointer"
-                    >
-                      <div>
-                        <div className="text-sm font-semibold text-gray-900">
-                          {e.subject}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          from: sender@example.com
-                        </div>
+              <div className="space-y-3">
+                {emails.map((e) => (
+                  <div
+                    key={e.id}
+                    className="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-3 hover:bg-gray-100 transition cursor-pointer"
+                  >
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {e.subject}
                       </div>
-
-                      <div className="ml-3">
-                        {loading ? (
-                          <svg
-                            className="h-4 w-4 animate-spin text-gray-400"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                            />
-                          </svg>
-                        ) : showResults ? (
-                          e.priority === "high" ? (
-                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600">
-                              High
-                            </span>
-                          ) : (
-                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">
-                              Low
-                            </span>
-                          )
-                        ) : (
-                          <span className="text-gray-400 text-xs font-medium">
-                            —
-                          </span>
-                        )}
+                      <div className="text-xs text-gray-500">
+                        from: sender@example.com
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                <button
-                  onClick={
-                    showResults
-                      ? () => {
-                          setLoading(false);
-                          setShowResults(false);
-                        }
-                      : runAnalysis
-                  }
-                  className="w-full mt-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition duration-300"
-                >
-                  {loading
-                    ? "Analyzing..."
-                    : showResults
-                    ? "Reset"
-                    : "Run AI Analysis"}
-                </button>
+                    <div className="ml-3">
+                      {loading ? (
+                        <svg
+                          className="h-4 w-4 animate-spin text-gray-400"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                          />
+                        </svg>
+                      ) : showResults ? (
+                        e.priority === "high" ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600">
+                            High
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">
+                            Low
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-gray-400 text-xs font-medium">
+                          —
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
+
+              <button
+                onClick={
+                  showResults
+                    ? () => {
+                        setLoading(false);
+                        setShowResults(false);
+                      }
+                    : runAnalysis
+                }
+                className="w-full mt-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:shadow-xl hover:scale-105 transition-all duration-200"
+              >
+                {loading
+                  ? "Analyzing..."
+                  : showResults
+                  ? "Reset"
+                  : "Run AI Analysis"}
+              </button>
             </div>
           </div>
         </div>
@@ -189,6 +188,89 @@ function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* About Section */}
+      <section className="bg-white py-24">
+        <div className="max-w-7xl mx-auto px-10">
+          <div className="grid grid-cols-2 gap-16 items-center">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                About Smart Inbox
+              </h2>
+              <p className="mt-6 text-gray-600 text-lg leading-relaxed">
+                Smart Inbox is designed to help professionals focus on what truly matters. By using AI-powered prioritization, the platform analyzes incoming emails and highlights the most important messages so you can spend less time sorting and more time acting.
+              </p>
+              <ul className="mt-6 space-y-3 text-gray-700">
+                <li>• AI-powered email prioritization</li>
+                <li>• Smart summaries of long conversations</li>
+                <li>• Seamless Gmail integration</li>
+              </ul>
+            </div>
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">AI-Powered Insights</h3>
+                <p className="text-gray-600">Get intelligent prioritization that learns from your behavior.</p>
+              </div>
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-xl">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Time-Saving Automation</h3>
+                <p className="text-gray-600">Reduce email management time by up to 50%.</p>
+              </div>
+              <div className="bg-gradient-to-r from-pink-50 to-orange-50 p-6 rounded-xl">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Seamless Integration</h3>
+                <p className="text-gray-600">Works directly with your existing Gmail account.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-400">
+        <div className="max-w-7xl mx-auto px-10 py-16">
+          <div className="grid grid-cols-4 gap-12">
+            <div>
+              <h3 className="text-white font-semibold mb-4">Product</h3>
+              <ul>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Features</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">AI Priority Detection</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Smart Summary</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Gmail Integration</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4">Resources</h3>
+              <ul>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Documentation</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">API</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Blog</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Help Center</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4">Company</h3>
+              <ul>
+                <li><a href="#" className="block mb-2 hover:text-white transition">About</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Careers</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Contact</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Partners</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4">Legal</h3>
+              <ul>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Privacy Policy</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Terms of Service</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Security</a></li>
+                <li><a href="#" className="block mb-2 hover:text-white transition">Status</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-700 mt-12 pt-6 flex items-center justify-between text-sm">
+            <div>Smart Inbox © 2026</div>
+            <div>Designed by Unified Coders</div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
