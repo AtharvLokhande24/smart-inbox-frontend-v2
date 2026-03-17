@@ -6,6 +6,8 @@ import RegisterPage from "../pages/RegisterPage";
 import Dashboard from "../pages/Dashboard";
 import GmailPage from "../pages/GmailPage";
 import SettingsPage from "../pages/SettingsPage";
+import ProfilePage from "../pages/ProfilePage";
+import NotificationsPage from "../pages/NotificationsPage";
 
 function AppRoutes() {
   return (
@@ -17,6 +19,8 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/gmail" element={<GmailPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
       </Routes>
     </BrowserRouter>
   );

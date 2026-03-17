@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { HiOutlineMail } from "react-icons/hi";
 import DashboardLayout from "../components/DashboardLayout";
 
 function SettingsPage() {
+  const [autoPrioritization, setAutoPrioritization] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -26,7 +28,10 @@ function SettingsPage() {
             <p className="text-sm text-slate-600">
               Update your profile information and manage account security from here.
             </p>
-            <button className="w-full rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition">
+            <button
+              onClick={() => navigate("/profile")}
+              className="w-full rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition"
+            >
               Edit Profile
             </button>
           </div>
