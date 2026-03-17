@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import DashboardLayout from "../components/DashboardLayout";
 import EmailCard from "../components/EmailCard";
+import ReplyBox from "../components/ReplyBox";
 import { HiOutlineSearch, HiOutlineBell } from "react-icons/hi";
 
 const mockEmails = [
@@ -31,8 +32,25 @@ const mockEmails = [
 ];
 
 const Dashboard = () => {
+  const [replyingEmailId, setReplyingEmailId] = useState(null);
+  const [replies, setReplies] = useState({});
 
-  return (
+  const handleReply = (emailId) => {
+    setReplyingEmailId(emailId);
+  };
+
+  const handleSendReply = (emailId, message) => {
+    console.log(`Reply sent to email ${emailId}:`, message);
+    setReplies({
+      ...replies,
+      [emailId]: message,
+    });
+    setReplyingEmailId(null);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingEmailId(null);
+  };
     <DashboardLayout title="Dashboard">
       <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-6">
         <section className="lg:col-span-8 flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
@@ -49,14 +67,24 @@ const Dashboard = () => {
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {mockEmails.map((email) => (
-              <EmailCard
-                key={email.id}
-                subject={email.subject}
-                sender={email.sender}
-                preview={email.preview}
-                priority={email.priority}
-                app={email.app}
-              />
+              <div key={email.id}>
+                <EmailCard
+                  subject={email.subject}
+                  sender={email.sender}
+                  preview={email.preview}
+                  priority={email.priority}
+                  app={email.app}
+                  onReply={() => handleReply(email.id)}
+                />
+                {replyingEmailId === email.id && (
+                  <ReplyBox
+                    sender={email.sender}
+                    subject={email.subject}
+                    onCancel={handleCancelReply}
+                    onSend={(message) => handleSendReply(email.id, message)}
+                  />
+                )}
+              </div>
             ))}
           </div>
         </section>
@@ -100,7 +128,8 @@ const Dashboard = () => {
         </aside>
       </div>
     </DashboardLayout>
-  );
+  
+
 };
 
 export default Dashboard;

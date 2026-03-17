@@ -3,7 +3,6 @@ import { HiOutlineMail } from "react-icons/hi";
 import DashboardLayout from "../components/DashboardLayout";
 
 function SettingsPage() {
-  const [autoPrioritization, setAutoPrioritization] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -79,27 +78,6 @@ function SettingsPage() {
           </div>
 
           <div className="mt-6 space-y-4">
-            <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  Auto AI prioritization
-                </p>
-                <p className="text-xs text-slate-500">
-                  Let the system rank incoming messages automatically.
-                </p>
-              </div>
-              <label className="relative inline-flex cursor-pointer items-center">
-                <input
-                  type="checkbox"
-                  className="peer sr-only"
-                  checked={autoPrioritization}
-                  onChange={(e) => setAutoPrioritization(e.target.checked)}
-                />
-                <span className="h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-indigo-600 transition" />
-                <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
-              </label>
-            </div>
-
             <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
               <div>
                 <p className="text-sm font-semibold text-slate-900">Email notifications</p>

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import DashboardLayout from "../components/DashboardLayout";
 import EmailCard from "../components/EmailCard";
+import ReplyBox from "../components/ReplyBox";
 
 const mockGmailEmails = [
   {
@@ -31,11 +32,30 @@ const mockGmailEmails = [
 
 function GmailPage() {
   const [filter, setFilter] = useState("All");
+  const [replyingEmailId, setReplyingEmailId] = useState(null);
+  const [replies, setReplies] = useState({});
 
   const filteredEmails = useMemo(() => {
     if (filter === "All") return mockGmailEmails;
     return mockGmailEmails.filter((email) => email.priority === filter);
   }, [filter]);
+
+  const handleReply = (emailId) => {
+    setReplyingEmailId(emailId);
+  };
+
+  const handleSendReply = (emailId, message) => {
+    console.log(`Reply sent to email ${emailId}:`, message);
+    setReplies({
+      ...replies,
+      [emailId]: message,
+    });
+    setReplyingEmailId(null);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingEmailId(null);
+  };
 
   return (
     <DashboardLayout title="Gmail">
@@ -88,15 +108,25 @@ function GmailPage() {
 
             <div className="mt-6 space-y-4">
               {filteredEmails.map((email) => (
-                <EmailCard
-                  key={email.id}
-                  subject={email.subject}
-                  sender={email.sender}
-                  preview={email.preview}
-                  priority={email.priority}
-                  date={email.date}
-                  app="Gmail"
-                />
+                <div key={email.id}>
+                  <EmailCard
+                    subject={email.subject}
+                    sender={email.sender}
+                    preview={email.preview}
+                    priority={email.priority}
+                    date={email.date}
+                    app="Gmail"
+                    onReply={() => handleReply(email.id)}
+                  />
+                  {replyingEmailId === email.id && (
+                    <ReplyBox
+                      sender={email.sender}
+                      subject={email.subject}
+                      onCancel={handleCancelReply}
+                      onSend={(message) => handleSendReply(email.id, message)}
+                    />
+                  )}
+                </div>
               ))}
               {filteredEmails.length === 0 ? (
                 <p className="text-sm text-slate-500">
