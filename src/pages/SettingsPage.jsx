@@ -9,6 +9,7 @@ function SettingsPage() {
   const [autoPrioritization, setAutoPrioritization] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  
   return (
     <DashboardLayout title="Settings">
       <div className="grid gap-6 lg:grid-cols-3">

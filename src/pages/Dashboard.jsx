@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import DashboardLayout from "../components/DashboardLayout";
 import EmailCard from "../components/EmailCard";
 import ReplyBox from "../components/ReplyBox";
-import { HiOutlineSearch, HiOutlineBell } from "react-icons/hi";
 
 const mockEmails = [
   {
@@ -52,68 +51,111 @@ const Dashboard = () => {
     setReplyingEmailId(null);
   };
 
-  // ✅ FIX: RETURN ADDED HERE
   return (
     <DashboardLayout title="Dashboard">
-      <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        <section className="lg:col-span-8 flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
-          
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+      <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-6 px-2">
+
+        {/* LEFT SECTION */}
+        <section className="lg:col-span-8 flex flex-col overflow-hidden rounded-3xl bg-white/70 backdrop-blur-xl shadow-lg border border-gray-200">
+
+          {/* 🔥 MODERN HEADER */}
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50/50">
+
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Smart Inbox</h2>
-              <p className="text-sm text-slate-500">
-                Prioritized by AI, ordered by importance.
+              <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
+                Smart Inbox
+              </h2>
+              <p className="text-xs text-gray-500 mt-1">
+                Prioritized by AI • Ordered by importance
               </p>
             </div>
 
-            <div className="inline-flex items-center gap-3 rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600">
-              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            <div className="flex items-center gap-2 bg-green-50 text-green-600 px-4 py-1.5 rounded-full text-xs font-medium shadow-sm">
+              <span className="h-2 w-2 bg-green-500 rounded-full"></span>
               Connected
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {mockEmails.map((email) => (
-              <div key={email.id}>
-                <EmailCard
-                  subject={email.subject}
-                  sender={email.sender}
-                  preview={email.preview}
-                  priority={email.priority}
-                  app={email.app}
-                  onReply={() => handleReply(email.id)}
-                />
+          {/* EMAIL LIST */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-5">
 
-                {replyingEmailId === email.id && (
-                  <ReplyBox
-                    sender={email.sender}
+            {mockEmails.map((email) => (
+              <div key={email.id} className="group">
+
+                <div className="transition-all duration-300 hover:scale-[1.01] hover:shadow-md rounded-xl">
+                  <EmailCard
                     subject={email.subject}
-                    onCancel={handleCancelReply}
-                    onSend={(message) => handleSendReply(email.id, message)}
+                    sender={email.sender}
+                    preview={email.preview}
+                    priority={email.priority}
+                    app={email.app}
+                    onReply={() => handleReply(email.id)}
                   />
+                </div>
+
+                {/* REPLY BOX */}
+                {replyingEmailId === email.id && (
+                  <div className="mt-3">
+                    <ReplyBox
+                      sender={email.sender}
+                      subject={email.subject}
+                      onCancel={handleCancelReply}
+                      onSend={(message) =>
+                        handleSendReply(email.id, message)
+                      }
+                    />
+                  </div>
                 )}
+
               </div>
             ))}
-          </div>
 
+          </div>
         </section>
 
+        {/* RIGHT SECTION */}
         <aside className="lg:col-span-4 flex flex-col gap-6">
-          
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">AI Insights</h2>
-            <p className="mt-1 text-sm text-slate-500">
+
+          {/* AI INSIGHTS */}
+          <div className="rounded-3xl bg-white/70 backdrop-blur-xl p-6 shadow-lg border border-gray-200">
+
+            <h2 className="text-lg font-semibold text-gray-900">
+              AI Insights
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-500">
               Quick insights to help you stay on top of your inbox.
             </p>
 
             <div className="mt-6 space-y-4">
-              <div className="rounded-xl border bg-slate-50 p-4">
-                <p className="text-sm font-semibold">Top sender</p>
-                <p className="text-sm text-slate-600">
+
+              <div className="rounded-xl bg-gray-50 p-4 hover:shadow-md transition">
+                <p className="text-sm font-semibold text-gray-800">
+                  Top sender
+                </p>
+                <p className="text-sm text-gray-600">
                   Project updates from pm@company.com
                 </p>
               </div>
+
+              <div className="rounded-xl bg-gray-50 p-4 hover:shadow-md transition">
+                <p className="text-sm font-semibold text-gray-800">
+                  Follow ups
+                </p>
+                <p className="text-sm text-gray-600">
+                  3 threads need a reply this week
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-gray-50 p-4 hover:shadow-md transition">
+                <p className="text-sm font-semibold text-gray-800">
+                  Focus time
+                </p>
+                <p className="text-sm text-gray-600">
+                  You have 2 uninterrupted hours today
+                </p>
+              </div>
+
             </div>
           </div>
 

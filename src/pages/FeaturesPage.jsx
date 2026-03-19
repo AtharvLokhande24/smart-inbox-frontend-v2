@@ -29,7 +29,7 @@ const FeaturesPage = () => {
       {/* HERO */}
       <div className="max-w-6xl mx-auto text-center pt-20 px-6">
         <h1 className="text-5xl font-bold text-gray-900">
-          Powerful Features to Boost Productivity 🚀
+          Powerful Features to Boost Productivity 
         </h1>
         <p className="mt-6 text-gray-600 text-lg">
           Smart Inbox helps you focus on what matters using AI-powered insights.
