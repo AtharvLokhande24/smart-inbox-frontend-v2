@@ -4,10 +4,11 @@ import { HiOutlineMail } from "react-icons/hi";
 import DashboardLayout from "../components/DashboardLayout";
 
 function SettingsPage() {
+  const navigate = useNavigate(); // ✅ ADD THIS
+
   const [autoPrioritization, setAutoPrioritization] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-
   return (
     <DashboardLayout title="Settings">
       <div className="grid gap-6 lg:grid-cols-3">
