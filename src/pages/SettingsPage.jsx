@@ -4,7 +4,7 @@ import { HiOutlineMail } from "react-icons/hi";
 import DashboardLayout from "../components/DashboardLayout";
 
 function SettingsPage() {
-  const navigate = useNavigate(); // ✅ ADD THIS
+  const navigate = useNavigate(); 
 
   const [autoPrioritization, setAutoPrioritization] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
