@@ -1,9 +1,15 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { HiOutlineSearch, HiOutlineBell } from "react-icons/hi";
+import { useAuth } from "../context/AuthContext";
 
 export default function Header({ title }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const userName = user?.name || "User";
+  const userEmail = user?.email || "";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   const subtitle = {
     Dashboard: "Your AI-prioritized inbox — focus on what matters most.",
@@ -56,12 +62,12 @@ export default function Header({ title }) {
           className="flex items-center gap-3 hover:bg-gray-50 px-3 py-2 rounded-lg transition"
         >
           <div className="text-right">
-            <p className="text-sm font-medium text-gray-800">Atharv</p>
-            <p className="text-xs text-gray-500">Product Manager</p>
+            <p className="text-sm font-medium text-gray-800">{userName}</p>
+            <p className="text-xs text-gray-500">{userEmail}</p>
           </div>
 
           <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-semibold text-white">
-            A
+            {userInitial}
           </div>
         </button>
 

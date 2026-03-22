@@ -2,9 +2,15 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiOutlineMail } from "react-icons/hi";
 import DashboardLayout from "../components/DashboardLayout";
+import { useAuth } from "../context/AuthContext";
 
 function SettingsPage() {
   const navigate = useNavigate(); 
+  const { user, gmailConnected } = useAuth();
+
+  const userName = user?.name || "User";
+  const userEmail = user?.email || "";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   const [autoPrioritization, setAutoPrioritization] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -17,12 +23,11 @@ function SettingsPage() {
         <section className="rounded-2xl bg-white p-6 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 rounded-full bg-indigo-600 text-white flex items-center justify-center text-2xl font-semibold">
-              A
+              {userInitial}
             </div>
             <div>
-              <p className="text-lg font-semibold text-slate-900">Atharv Singh</p>
-              <p className="text-sm text-slate-500">atharv@example.com</p>
-              <p className="text-xs text-slate-400">Product Manager</p>
+              <p className="text-lg font-semibold text-slate-900">{userName}</p>
+              <p className="text-sm text-slate-500">{userEmail}</p>
             </div>
           </div>
 
@@ -49,9 +54,13 @@ function SettingsPage() {
               </p>
             </div>
 
-            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              <span className="h-2 w-2 rounded-full bg-emerald-600" />
-              Connected
+            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+              gmailConnected
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-amber-50 text-amber-700"
+            }`}>
+              <span className={`h-2 w-2 rounded-full ${gmailConnected ? "bg-emerald-600" : "bg-amber-500"}`} />
+              {gmailConnected ? "Connected" : "Not Connected"}
             </span>
           </div>
 

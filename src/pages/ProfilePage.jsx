@@ -2,18 +2,26 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import { HiOutlineArrowLeft, HiOutlineSave } from "react-icons/hi";
+import { useAuth } from "../context/AuthContext";
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Split the user's name into first and last
+  const nameParts = (user?.name || "").trim().split(/\s+/);
+  const defaultFirst = nameParts[0] || "";
+  const defaultLast = nameParts.slice(1).join(" ") || "";
+
   const [formData, setFormData] = useState({
-    firstName: "Atharv",
-    lastName: "Singh",
-    email: "atharv@example.com",
-    jobTitle: "Product Manager",
-    phone: "+1 (555) 123-4567",
-    bio: "I'm a product manager passionate about building ai-powered solutions.",
-    department: "Product",
-    location: "San Francisco, CA",
+    firstName: defaultFirst,
+    lastName: defaultLast,
+    email: user?.email || "",
+    jobTitle: "",
+    phone: "",
+    bio: "",
+    department: "",
+    location: "",
   });
 
   const [isSaving, setIsSaving] = useState(false);
