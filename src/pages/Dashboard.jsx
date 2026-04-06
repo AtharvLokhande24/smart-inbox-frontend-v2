@@ -1,24 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import DashboardLayout from "../components/DashboardLayout";
 import EmailCard from "../components/EmailCard";
-import ReplyBox from "../components/ReplyBox";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
-const POLL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+const RECENT_DAYS = 2;
+const RECENT_LIMIT = 25;
 
 const Dashboard = () => {
   const { user, gmailConnected } = useAuth();
   const [emails, setEmails] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analyzeResult, setAnalyzeResult] = useState(null);
   const [toast, setToast] = useState(null);
-
-  const [replyingEmailId, setReplyingEmailId] = useState(null);
-  const [replies, setReplies] = useState({});
-  const pollRef = useRef(null);
+  const eventSourceRef = useRef(null);
 
   // Fetch prioritized emails from DB
   const fetchEmails = useCallback(async () => {
@@ -27,7 +21,9 @@ const Dashboard = () => {
       return;
     }
     try {
-      const res = await api.get(`/gmail/emails/${user.id}/priority`);
+      const res = await api.get(`/priority/user/${user.id}/emails`, {
+        params: { days: RECENT_DAYS, limit: RECENT_LIMIT }
+      });
       const mappedEmails = (res.data.emails || []).map((e) => {
         let uiPriority = "Low";
         if (e.priority) {
@@ -42,6 +38,7 @@ const Dashboard = () => {
           app: "Gmail",
           preview: e.snippet || "",
           priority: uiPriority,
+          gmailLink: e.gmail_link || "",
         };
       });
       setEmails(mappedEmails);
@@ -52,83 +49,61 @@ const Dashboard = () => {
     }
   }, [user, gmailConnected]);
 
-  // Pull new emails from Gmail API → DB, then refresh the list
-  const syncNewEmails = useCallback(async (isManual = false) => {
-    if (!user || !gmailConnected) return;
-    if (isManual) setRefreshing(true);
-    try {
-      const res = await api.get(`/gmail/fetch/${user.id}`);
-      const newCount = res.data.count || 0;
-      // Always refresh the displayed list after sync
-      await fetchEmails();
-      if (newCount > 0) {
-        setToast(`${newCount} new email${newCount > 1 ? "s" : ""} fetched!`);
-        setTimeout(() => setToast(null), 4000);
-      } else if (isManual) {
-        setToast("Inbox is up to date");
-        setTimeout(() => setToast(null), 3000);
-      }
-    } catch (error) {
-      console.error("Failed to sync new emails", error);
-      if (isManual) {
-        setToast("Failed to refresh emails");
-        setTimeout(() => setToast(null), 4000);
-      }
-    } finally {
-      if (isManual) setRefreshing(false);
-    }
-  }, [user, gmailConnected, fetchEmails]);
-
   // Initial load
   useEffect(() => {
     fetchEmails();
   }, [fetchEmails]);
 
-  // Auto-poll for new emails every 2 minutes
+  // Live updates from backend SSE stream + Pub/Sub watch notifications.
   useEffect(() => {
     if (!user || !gmailConnected) return;
-    // Do an initial sync shortly after mount
-    const initialTimeout = setTimeout(() => syncNewEmails(false), 5000);
-    // Then poll every POLL_INTERVAL_MS
-    pollRef.current = setInterval(() => syncNewEmails(false), POLL_INTERVAL_MS);
-    return () => {
-      clearTimeout(initialTimeout);
-      clearInterval(pollRef.current);
-    };
-  }, [user, gmailConnected, syncNewEmails]);
 
-  const handleAnalyze = async () => {
-    if (!user) return;
-    setAnalyzing(true);
-    setAnalyzeResult(null);
-    try {
-      const res = await api.post(`/gmail/analyze/user/${user.id}`);
-      setAnalyzeResult({
-        type: "success",
-        message: `Analysis complete — ${res.data.analyzed} analyzed, ${res.data.skipped} already done${res.data.failed ? `, ${res.data.failed} failed` : ""}`
-      });
-      // Re-fetch emails to show updated priorities
-      await fetchEmails();
-    } catch (error) {
-      const msg = error.response?.data?.error || error.message || "Analysis failed";
-      setAnalyzeResult({ type: "error", message: msg });
-    } finally {
-      setAnalyzing(false);
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
     }
-  };
 
-  const handleReply = (emailId) => {
-    setReplyingEmailId(emailId);
-  };
+    const streamUrl = `${api.defaults.baseURL}/gmail/stream/${user.id}`;
+    const source = new EventSource(streamUrl, { withCredentials: true });
+    eventSourceRef.current = source;
 
-  const handleSendReply = (emailId, message) => {
-    console.log(`Reply sent to email ${emailId}:`, message);
-    setReplies({ ...replies, [emailId]: message });
-    setReplyingEmailId(null);
-  };
+    source.addEventListener("connected", () => {
+      setToast("Live sync connected");
+      setTimeout(() => setToast(null), 1800);
+    });
 
-  const handleCancelReply = () => {
-    setReplyingEmailId(null);
+    source.addEventListener("new_emails", async (event) => {
+      try {
+        const payload = JSON.parse(event.data || "{}");
+        const count = Number(payload.count || 0);
+        if (count > 0) {
+          setToast(`${count} new email${count > 1 ? "s" : ""} received`);
+          setTimeout(() => setToast(null), 3500);
+        }
+      } catch {
+        // Ignore parse failures; still refresh data.
+      }
+
+      await fetchEmails();
+    });
+
+    source.onerror = () => {
+      setToast("Live sync unstable, reconnecting...");
+      setTimeout(() => setToast(null), 2500);
+    };
+
+    return () => {
+      source.close();
+    };
+  }, [user, gmailConnected, fetchEmails]);
+
+  const handleReply = (gmailLink) => {
+    if (!gmailLink) {
+      setToast("Gmail link not available for this email");
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    window.open(gmailLink, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -138,68 +113,9 @@ const Dashboard = () => {
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50/50">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Smart Inbox</h2>
-              <p className="text-xs text-gray-500 mt-1">Prioritized by AI • Auto-refreshes every 2 min</p>
+              <p className="text-xs text-gray-500 mt-1">Top {RECENT_LIMIT} emails from last {RECENT_DAYS} days • Live updates via Gmail watch</p>
             </div>
             <div className="flex items-center gap-3">
-              {gmailConnected && (
-                <>
-                  <button
-                    id="refresh-emails-btn"
-                    onClick={() => syncNewEmails(true)}
-                    disabled={refreshing}
-                    title="Fetch new emails from Gmail"
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 cursor-pointer ${
-                      refreshing
-                        ? "bg-blue-100 text-blue-400 cursor-wait"
-                        : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 active:scale-95"
-                    }`}
-                  >
-                    {refreshing ? (
-                      <>
-                        <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        Refreshing…
-                      </>
-                    ) : (
-                      <>
-                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Refresh
-                      </>
-                    )}
-                  </button>
-                  <button
-                    id="analyze-emails-btn"
-                    onClick={handleAnalyze}
-                    disabled={analyzing}
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 cursor-pointer ${
-                      analyzing
-                        ? "bg-purple-100 text-purple-400 cursor-wait"
-                        : "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 active:scale-95"
-                    }`}
-                  >
-                    {analyzing ? (
-                      <>
-                        <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        Analyzing…
-                      </>
-                    ) : (
-                      <>
-                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        Analyze Emails
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
               {gmailConnected ? (
                 <div className="flex items-center gap-2 bg-green-50 text-green-600 px-4 py-1.5 rounded-full text-xs font-medium shadow-sm">
                   <span className="h-2 w-2 bg-green-500 rounded-full"></span>
@@ -222,15 +138,9 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Analysis result banner */}
-          {analyzeResult && (
-            <div className={`mx-6 mt-3 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-between ${
-              analyzeResult.type === "success"
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "bg-red-50 text-red-700 border border-red-200"
-            }`}>
-              <span>{analyzeResult.message}</span>
-              <button onClick={() => setAnalyzeResult(null)} className="ml-3 text-current opacity-50 hover:opacity-100 cursor-pointer">✕</button>
+          {gmailConnected && (
+            <div >
+             
             </div>
           )}
 
@@ -249,7 +159,7 @@ const Dashboard = () => {
                 <button 
                   onClick={async () => {
                     try {
-                      const res = await api.get("/login/oauth2/login");
+                      const res = await api.get("/gmail/login");
                       window.location.href = res.data.loginUrl;
                     } catch (err) {
                       console.error("Failed to load login URL", err);
@@ -272,19 +182,9 @@ const Dashboard = () => {
                       preview={email.preview}
                       priority={email.priority}
                       app={email.app}
-                      onReply={() => handleReply(email.id)}
+                      onReply={() => handleReply(email.gmailLink)}
                     />
                   </div>
-                  {replyingEmailId === email.id && (
-                    <div className="mt-3">
-                      <ReplyBox
-                        sender={email.sender}
-                        subject={email.subject}
-                        onCancel={handleCancelReply}
-                        onSend={(message) => handleSendReply(email.id, message)}
-                      />
-                    </div>
-                  )}
                 </div>
               ))
             )}

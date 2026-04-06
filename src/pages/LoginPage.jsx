@@ -30,9 +30,13 @@ function LoginPage() {
     }
   };
 
-  function handleGoogleLogin() {
-    // Redirect to backend OAuth URL
-    window.location.href = "http://localhost:8000/login/oauth2/login";
+  async function handleGoogleLogin() {
+    try {
+      const res = await api.get("/gmail/login");
+      window.location.href = res.data.loginUrl;
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to start Google login.");
+    }
   }
 
   return (

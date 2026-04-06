@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import { HiOutlineArrowLeft, HiOutlineSave } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
+import { getProfile, updateProfile as updateProfileApi } from "../services/api";
 
 function ProfilePage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateProfile: updateAuthProfile } = useAuth();
 
   // Split the user's name into first and last
   const nameParts = (user?.name || "").trim().split(/\s+/);
@@ -17,14 +18,44 @@ function ProfilePage() {
     firstName: defaultFirst,
     lastName: defaultLast,
     email: user?.email || "",
-    jobTitle: "",
-    phone: "",
-    bio: "",
-    department: "",
-    location: "",
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    async function loadProfile() {
+      if (!user?.id) return;
+
+      setIsLoadingProfile(true);
+      setSaveError("");
+
+      try {
+        const res = await getProfile(user.id);
+        const profile = res.data?.data;
+
+        if (profile) {
+          const profileNameParts = String(profile.name || "").trim().split(/\s+/);
+          const profileFirst = profileNameParts[0] || "";
+          const profileLast = profileNameParts.slice(1).join(" ") || "";
+
+          setFormData({
+            firstName: profileFirst,
+            lastName: profileLast,
+            email: profile.email || ""
+          });
+        }
+      } catch (error) {
+        const errorMsg = error.response?.data?.error || error.message || "Failed to load profile";
+        setSaveError(errorMsg);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    }
+
+    loadProfile();
+  }, [user?.id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,12 +66,39 @@ function ProfilePage() {
   };
 
   const handleSave = async () => {
+    if (!user?.id) return;
+
     setIsSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    alert("Profile updated successfully!");
-    navigate("/settings");
+    setSaveError("");
+
+    try {
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      const payload = {
+        name: fullName,
+        email: formData.email,
+      };
+
+      console.log(`[ProfilePage] Saving profile for user ${user.id}:`, payload);
+      const res = await updateProfileApi(user.id, payload);
+      console.log(`[ProfilePage] Profile save response:`, res.data);
+      const updated = res.data?.data;
+
+      if (updated?.id) {
+        updateAuthProfile({
+          id: updated.id,
+          name: updated.name,
+          email: updated.email,
+        });
+      }
+
+      navigate("/settings");
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || error.message || "Failed to update profile";
+      console.error(`[ProfilePage] Profile save error:`, error.response?.status, error.response?.data, error.message);
+      setSaveError(errorMsg);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -68,11 +126,23 @@ function ProfilePage() {
                 {formData.firstName} {formData.lastName}
               </h2>
               <p className="text-sm text-slate-500 mt-1">{formData.email}</p>
-              <button className="mt-3 px-4 py-2 rounded-lg bg-indigo-50 text-indigo-600 text-sm font-medium hover:bg-indigo-100 transition">
-                Change Avatar
-              </button>
+              <p className="mt-3 text-xs text-slate-500">
+                Profile supports name and email fields from backend model.
+              </p>
             </div>
           </div>
+
+          {saveError ? (
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {saveError}
+            </div>
+          ) : null}
+
+          {isLoadingProfile ? (
+            <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Loading latest profile...
+            </div>
+          ) : null}
 
           {/* Form Fields */}
           <div className="space-y-6">
@@ -104,8 +174,8 @@ function ProfilePage() {
               </div>
             </div>
 
-            {/* Email and Phone */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Email */}
+            <div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Email
@@ -118,74 +188,6 @@ function ProfilePage() {
                   className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                />
-              </div>
-            </div>
-
-            {/* Job Title and Department */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Job Title
-                </label>
-                <input
-                  type="text"
-                  name="jobTitle"
-                  value={formData.jobTitle}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Department
-                </label>
-                <input
-                  type="text"
-                  name="department"
-                  value={formData.department}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                />
-              </div>
-            </div>
-
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Location
-              </label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-              />
-            </div>
-
-            {/* Bio */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Bio
-              </label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                rows="4"
-                className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"
-              />
             </div>
           </div>
 
@@ -199,11 +201,11 @@ function ProfilePage() {
             </button>
             <button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || isLoadingProfile}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:shadow-lg transition disabled:opacity-70"
             >
               <HiOutlineSave className="text-lg" />
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving ? "Saving..." : isLoadingProfile ? "Loading..." : "Save Changes"}
             </button>
           </div>
         </div>

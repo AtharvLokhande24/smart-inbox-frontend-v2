@@ -8,14 +8,30 @@ export const AuthProvider = ({ children }) => {
   const [gmailConnected, setGmailConnected] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // On mount, check if the JWT cookie is valid and fetch user profile
+  // On mount, validate JWT by fetching the persisted user from protected /users/:id.
   useEffect(() => {
     async function checkAuth() {
       try {
-        const res = await api.get("/auth/me");
-        setUser(res.data.user);
-        setGmailConnected(res.data.user.gmailConnected);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
+        const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+        if (!storedUser?.id) {
+          setUser(null);
+          setGmailConnected(false);
+          localStorage.removeItem("user");
+          return;
+        }
+
+        const res = await api.get(`/users/${storedUser.id}`);
+        const userFromApi = res.data?.data;
+
+        const normalizedUser = {
+          id: userFromApi.id,
+          name: userFromApi.name,
+          email: userFromApi.email,
+        };
+
+        setUser(normalizedUser);
+        setGmailConnected(Boolean(userFromApi?.google_id));
+        localStorage.setItem("user", JSON.stringify(normalizedUser));
       } catch {
         // JWT expired or missing – clear any stale local data
         setUser(null);
@@ -29,8 +45,30 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+    const normalizedUser = {
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+    };
+
+    setUser(normalizedUser);
+    setGmailConnected(Boolean(userData.gmailConnected || userData.google_id));
+    localStorage.setItem("user", JSON.stringify(normalizedUser));
+  };
+
+  const updateProfile = (partialUserData) => {
+    setUser((prev) => {
+      const nextUser = {
+        ...(prev || {}),
+        ...(partialUserData || {}),
+      };
+
+      if (nextUser?.id) {
+        localStorage.setItem("user", JSON.stringify(nextUser));
+      }
+
+      return nextUser;
+    });
   };
 
   const logout = async () => {
@@ -45,7 +83,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, gmailConnected, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, gmailConnected, loading, login, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

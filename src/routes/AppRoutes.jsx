@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "../pages/LandingPage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
+import GoogleCallbackPage from "../pages/GoogleCallbackPage";
 import Dashboard from "../pages/Dashboard";
 import GmailPage from "../pages/GmailPage";
 import SettingsPage from "../pages/SettingsPage";
@@ -21,6 +22,7 @@ function AppRoutes() {
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
         {/* Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />

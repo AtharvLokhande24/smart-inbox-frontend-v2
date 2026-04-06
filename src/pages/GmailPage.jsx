@@ -1,23 +1,23 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import EmailCard from "../components/EmailCard";
-import ReplyBox from "../components/ReplyBox";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
-const POLL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+const RECENT_DAYS = 2;
+const RECENT_LIMIT = 25;
 
 function GmailPage() {
   const { user, gmailConnected } = useAuth();
+  const [searchParams] = useSearchParams();
   const [emails, setEmails] = useState([]);
+  const [allEmails, setAllEmails] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState(null);
   
   const [filter, setFilter] = useState("All");
-  const [replyingEmailId, setReplyingEmailId] = useState(null);
-  const [replies, setReplies] = useState({});
-  const pollRef = useRef(null);
+  const eventSourceRef = useRef(null);
 
   const fetchGmail = useCallback(async () => {
     if (!user || !gmailConnected) {
@@ -25,7 +25,9 @@ function GmailPage() {
       return;
     }
     try {
-      const res = await api.get(`/gmail/emails/${user.id}/priority`);
+      const res = await api.get(`/priority/user/${user.id}/emails`, {
+        params: { days: RECENT_DAYS, limit: RECENT_LIMIT }
+      });
       const mappedEmails = (res.data.emails || []).map((e) => {
         let uiPriority = "Low";
         if (e.priority) {
@@ -39,9 +41,11 @@ function GmailPage() {
           sender: e.sender_email || "Unknown",
           preview: e.snippet || "",
           priority: uiPriority,
-          date: e.received_at ? new Date(e.received_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""
+          date: e.received_at ? new Date(e.received_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
+          gmailLink: e.gmail_link || "",
         };
       });
+      setAllEmails(mappedEmails);
       setEmails(mappedEmails);
     } catch (error) {
       console.error("Failed to fetch gmail", error);
@@ -50,65 +54,124 @@ function GmailPage() {
     }
   }, [user, gmailConnected]);
 
-  // Pull new emails from Gmail API → DB, then refresh the list
-  const syncNewEmails = useCallback(async (isManual = false) => {
+  const runSearch = useCallback(async (queryText) => {
     if (!user || !gmailConnected) return;
-    if (isManual) setRefreshing(true);
-    try {
-      const res = await api.get(`/gmail/fetch/${user.id}`);
-      const newCount = res.data.count || 0;
+
+    const query = String(queryText || "").trim();
+    if (!query) {
       await fetchGmail();
-      if (newCount > 0) {
-        setToast(`${newCount} new email${newCount > 1 ? "s" : ""} fetched!`);
-        setTimeout(() => setToast(null), 4000);
-      } else if (isManual) {
-        setToast("Inbox is up to date");
-        setTimeout(() => setToast(null), 3000);
-      }
-    } catch (error) {
-      console.error("Failed to sync new emails", error);
-      if (isManual) {
-        setToast("Failed to refresh emails");
-        setTimeout(() => setToast(null), 4000);
-      }
-    } finally {
-      if (isManual) setRefreshing(false);
+      return;
     }
-  }, [user, gmailConnected, fetchGmail]);
 
-  // Initial load
+    setLoading(true);
+    try {
+      const res = await api.get(`/priority/user/${user.id}/search`, {
+        params: {
+          q: query,
+          days: RECENT_DAYS,
+          limit: RECENT_LIMIT,
+        },
+      });
+
+      const mappedEmails = (res.data.emails || []).map((e) => {
+        let uiPriority = "Low";
+        if (e.priority) {
+          if (e.priority.label === "URGENT" || e.priority.label === "IMPORTANT") uiPriority = "High";
+          else if (e.priority.label === "NORMAL") uiPriority = "Medium";
+        }
+
+        return {
+          id: e.id,
+          subject: e.subject || "(No Subject)",
+          sender: e.sender_email || "Unknown",
+          preview: e.snippet || "",
+          priority: uiPriority,
+          date: e.received_at ? new Date(e.received_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
+          gmailLink: e.gmail_link || "",
+        };
+      });
+
+      setEmails(mappedEmails);
+    } catch (error) {
+      console.error("Failed to search emails", error);
+
+      // Fallback: if search route isn't available in running backend process, filter locally.
+      const fallback = allEmails.filter((email) => {
+        const haystack = `${email.subject || ""} ${email.sender || ""} ${email.preview || ""}`.toLowerCase();
+        return haystack.includes(query.toLowerCase());
+      });
+
+      setEmails(fallback);
+      const apiMessage = error.response?.data?.error || error.message || "Search failed";
+      setToast(`Search route failed, showing local results. ${apiMessage}`);
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, gmailConnected, fetchGmail, allEmails]);
+
+  // Initial load or header-search driven load.
   useEffect(() => {
-    fetchGmail();
-  }, [fetchGmail]);
+    const headerQuery = searchParams.get("q") || "";
+    if (headerQuery.trim()) {
+      runSearch(headerQuery);
+      return;
+    }
 
-  // Auto-poll every 2 minutes
+    fetchGmail();
+  }, [fetchGmail, runSearch, searchParams]);
+
+  // Live updates from backend SSE stream + Pub/Sub watch notifications.
   useEffect(() => {
     if (!user || !gmailConnected) return;
-    const initialTimeout = setTimeout(() => syncNewEmails(false), 5000);
-    pollRef.current = setInterval(() => syncNewEmails(false), POLL_INTERVAL_MS);
-    return () => {
-      clearTimeout(initialTimeout);
-      clearInterval(pollRef.current);
+
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    const streamUrl = `${api.defaults.baseURL}/gmail/stream/${user.id}`;
+    const source = new EventSource(streamUrl, { withCredentials: true });
+    eventSourceRef.current = source;
+
+    source.addEventListener("new_emails", async (event) => {
+      try {
+        const payload = JSON.parse(event.data || "{}");
+        const count = Number(payload.count || 0);
+        if (count > 0) {
+          setToast(`${count} new email${count > 1 ? "s" : ""} received`);
+          setTimeout(() => setToast(null), 3500);
+        }
+      } catch {
+        // Ignore parse failures; still refresh list.
+      }
+
+      await fetchGmail();
+    });
+
+    source.onerror = () => {
+      setToast("Live sync disconnected, retrying...");
+      setTimeout(() => setToast(null), 2500);
+      source.close();
     };
-  }, [user, gmailConnected, syncNewEmails]);
+
+    return () => {
+      source.close();
+    };
+  }, [user, gmailConnected, fetchGmail]);
 
   const filteredEmails = useMemo(() => {
     if (filter === "All") return emails;
     return emails.filter((email) => email.priority === filter);
   }, [filter, emails]);
 
-  const handleReply = (emailId) => {
-    setReplyingEmailId(emailId);
-  };
+  const handleReply = (gmailLink) => {
+    if (!gmailLink) {
+      setToast("Gmail link not available for this email");
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
 
-  const handleSendReply = (emailId, message) => {
-    console.log(`Reply sent to email ${emailId}:`, message);
-    setReplies({ ...replies, [emailId]: message });
-    setReplyingEmailId(null);
-  };
-
-  const handleCancelReply = () => {
-    setReplyingEmailId(null);
+    window.open(gmailLink, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -119,39 +182,9 @@ function GmailPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Gmail status</h2>
-                <p className="mt-1 text-sm text-slate-500">{gmailConnected ? "Connected • Auto-refreshes every 2 min" : "Gmail not connected"}</p>
+                <p className="mt-1 text-sm text-slate-500">{gmailConnected ? `Connected • Top ${RECENT_LIMIT} from last ${RECENT_DAYS} days • Live updates` : "Gmail not connected"}</p>
               </div>
               <div className="flex items-center gap-2">
-                {gmailConnected && (
-                  <button
-                    id="refresh-gmail-btn"
-                    onClick={() => syncNewEmails(true)}
-                    disabled={refreshing}
-                    title="Fetch new emails from Gmail"
-                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold shadow-sm transition-all duration-200 cursor-pointer ${
-                      refreshing
-                        ? "bg-blue-100 text-blue-400 cursor-wait"
-                        : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 active:scale-95"
-                    }`}
-                  >
-                    {refreshing ? (
-                      <>
-                        <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        Refreshing…
-                      </>
-                    ) : (
-                      <>
-                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Refresh
-                      </>
-                    )}
-                  </button>
-                )}
                 {gmailConnected ? (
                   <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                     <span className="h-2 w-2 rounded-full bg-emerald-600" />
@@ -175,11 +208,16 @@ function GmailPage() {
             </div>
           )}
 
+          {gmailConnected && (
+            <div>
+            </div>
+          )}
+
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Email list</h2>
-                <p className="mt-1 text-sm text-slate-500">Filter what you see in your inbox.</p>
+                <p className="mt-1 text-sm text-slate-500">Filter what you see in your inbox. Use top search bar to search.</p>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 {[
@@ -216,7 +254,7 @@ function GmailPage() {
                   <button 
                     onClick={async () => {
                       try {
-                        const res = await api.get("/login/oauth2/login");
+                        const res = await api.get("/gmail/login");
                         window.location.href = res.data.loginUrl;
                       } catch (err) {
                         console.error("Failed to load login URL", err);
@@ -236,16 +274,8 @@ function GmailPage() {
                     priority={email.priority}
                     date={email.date}
                     app="Gmail"
-                    onReply={() => handleReply(email.id)}
+                    onReply={() => handleReply(email.gmailLink)}
                   />
-                  {replyingEmailId === email.id && (
-                    <ReplyBox
-                      sender={email.sender}
-                      subject={email.subject}
-                      onCancel={handleCancelReply}
-                      onSend={(message) => handleSendReply(email.id, message)}
-                    />
-                  )}
                 </div>
               ))}
               {!loading && filteredEmails.length === 0 ? (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiOutlineSearch, HiOutlineBell } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 export default function Header({ title }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const userName = user?.name || "User";
   const userEmail = user?.email || "";
@@ -17,6 +18,18 @@ export default function Header({ title }) {
     Settings: "Manage account settings and integrations.",
     "Edit Profile": "Update your personal and professional information.",
     Notifications: "Stay updated with all your notifications.",
+  };
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    const query = searchTerm.trim();
+
+    if (!query) {
+      navigate("/gmail");
+      return;
+    }
+
+    navigate(`/gmail?q=${encodeURIComponent(query)}`);
   };
 
   return (
@@ -34,14 +47,21 @@ export default function Header({ title }) {
 
       {/* CENTER SEARCH */}
       <div className="flex flex-1 justify-center px-6">
-        <div className="w-full max-w-md flex items-center bg-gray-100 rounded-lg px-3 py-2 hover:bg-gray-200 transition">
-          <HiOutlineSearch className="text-gray-500 text-lg" />
+        <form
+          onSubmit={handleSearchSubmit}
+          className="w-full max-w-md flex items-center bg-gray-100 rounded-lg px-3 py-2 hover:bg-gray-200 transition"
+        >
+          <button type="submit" className="text-gray-500 text-lg" aria-label="Search emails">
+            <HiOutlineSearch className="text-gray-500 text-lg" />
+          </button>
           <input
             type="text"
             placeholder="Search emails, senders, or keywords..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="ml-3 w-full bg-transparent outline-none text-sm text-gray-700"
           />
-        </div>
+        </form>
       </div>
 
       {/* RIGHT */}
