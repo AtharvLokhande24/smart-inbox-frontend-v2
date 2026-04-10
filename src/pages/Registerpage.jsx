@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { FcGoogle } from "react-icons/fc";
+import { FaMicrosoft } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { startOAuthLogin } from "../services/oauth";
 
 function RegisterPage() {
   const [name, setName] = useState("");
@@ -43,11 +45,16 @@ function RegisterPage() {
   };
 
   async function handleGoogleLogin() {
-    try {
-      const res = await api.get("/gmail/login");
-      window.location.href = res.data.loginUrl;
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to start Google login.");
+    const oauthError = await startOAuthLogin("gmail");
+    if (oauthError) {
+      setError(oauthError);
+    }
+  }
+
+  async function handleOutlookLogin() {
+    const oauthError = await startOAuthLogin("outlook");
+    if (oauthError) {
+      setError(oauthError);
     }
   }
 
@@ -124,6 +131,15 @@ function RegisterPage() {
           >
             <FcGoogle size={20} />
             Continue with Google
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOutlookLogin}
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 mb-3 hover:bg-gray-50 transition transform hover:scale-105"
+          >
+            <FaMicrosoft size={18} className="text-blue-600" />
+            Continue with Outlook
           </button>
 
           <p className="text-center text-sm text-gray-600 mt-6">

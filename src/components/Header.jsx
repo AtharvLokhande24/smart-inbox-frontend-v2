@@ -15,6 +15,7 @@ export default function Header({ title }) {
   const subtitle = {
     Dashboard: "Your AI-prioritized inbox — focus on what matters most.",
     Gmail: "Your Gmail inbox prioritized by AI.",
+    Outlook: "Your Outlook inbox prioritized by AI.",
     Settings: "Manage account settings and integrations.",
     "Edit Profile": "Update your personal and professional information.",
     Notifications: "Stay updated with all your notifications.",
@@ -33,14 +34,14 @@ export default function Header({ title }) {
   };
 
   return (
-    <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+    <header className="flex items-center justify-between border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 py-4">
 
       {/* LEFT */}
       <div className="flex flex-col">
-        <h1 className="text-2xl font-semibold text-gray-800">
+        <h1 className="text-2xl font-semibold text-gray-800 dark:text-slate-100">
           {title}
         </h1>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-slate-400">
           {subtitle[title] || ""}
         </p>
       </div>
@@ -49,17 +50,17 @@ export default function Header({ title }) {
       <div className="flex flex-1 justify-center px-6">
         <form
           onSubmit={handleSearchSubmit}
-          className="w-full max-w-md flex items-center bg-gray-100 rounded-lg px-3 py-2 hover:bg-gray-200 transition"
+          className="w-full max-w-md flex items-center bg-gray-100 dark:bg-slate-800 rounded-lg px-3 py-2 hover:bg-gray-200 dark:hover:bg-slate-700 transition"
         >
-          <button type="submit" className="text-gray-500 text-lg" aria-label="Search emails">
-            <HiOutlineSearch className="text-gray-500 text-lg" />
+          <button type="submit" className="text-gray-500 dark:text-slate-400 text-lg" aria-label="Search emails">
+            <HiOutlineSearch className="text-gray-500 dark:text-slate-400 text-lg" />
           </button>
           <input
             type="text"
             placeholder="Search emails, senders, or keywords..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="ml-3 w-full bg-transparent outline-none text-sm text-gray-700"
+            className="ml-3 w-full bg-transparent outline-none text-sm text-gray-700 dark:text-slate-200"
           />
         </form>
       </div>
@@ -70,20 +71,20 @@ export default function Header({ title }) {
         {/* NOTIFICATION */}
         <button
           onClick={() => navigate("/notifications")}
-          className="p-2 rounded-lg hover:bg-gray-100 transition relative"
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition relative"
         >
-          <HiOutlineBell className="text-gray-600 text-lg" />
+          <HiOutlineBell className="text-gray-600 dark:text-slate-300 text-lg" />
           <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500" />
         </button>
 
         {/* PROFILE */}
         <button
           onClick={() => navigate("/profile")}
-          className="flex items-center gap-3 hover:bg-gray-50 px-3 py-2 rounded-lg transition"
+          className="flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-slate-800 px-3 py-2 rounded-lg transition"
         >
           <div className="text-right">
-            <p className="text-sm font-medium text-gray-800">{userName}</p>
-            <p className="text-xs text-gray-500">{userEmail}</p>
+            <p className="text-sm font-medium text-gray-800 dark:text-slate-100">{userName}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">{userEmail}</p>
           </div>
 
           <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-semibold text-white">

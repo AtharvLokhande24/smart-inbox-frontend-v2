@@ -1,3 +1,54 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+	@apply bg-slate-50 text-slate-900 transition-colors duration-200;
+}
+
+.dark body {
+	@apply bg-slate-950 text-slate-100;
+}
+
+/* Global dark overrides so existing white/light cards become dark app-wide. */
+.dark .bg-white {
+	background-color: rgb(15 23 42) !important;
+}
+
+.dark .bg-gray-50,
+.dark .bg-slate-50,
+.dark .bg-gray-100,
+.dark .bg-slate-100 {
+	background-color: rgb(30 41 59) !important;
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-slate-200,
+.dark .border-gray-300 {
+	border-color: rgb(51 65 85) !important;
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-slate-900,
+.dark .text-slate-800 {
+	color: rgb(241 245 249) !important;
+}
+
+.dark .text-gray-700,
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-slate-700,
+.dark .text-slate-600,
+.dark .text-slate-500 {
+	color: rgb(203 213 225) !important;
+}
+
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover,
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-gray-200:hover {
+	background-color: rgb(51 65 85) !important;
+}

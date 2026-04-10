@@ -4,89 +4,104 @@ import DashboardLayout from "../components/DashboardLayout";
 import EmailCard from "../components/EmailCard";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { startOAuthLogin } from "../services/oauth";
 
 const RECENT_DAYS = 14;
 const RECENT_LIMIT = 25;
 
-function isGmailLink(link) {
-  return String(link || "").toLowerCase().includes("mail.google.com");
+function getOutlookPollIntervalMs() {
+  const configured = Number(import.meta.env.VITE_OUTLOOK_POLL_MS);
+  if (!Number.isFinite(configured)) {
+    return 60 * 1000;
+  }
+
+  // Keep interval in a safe range: 15s to 10m.
+  return Math.min(Math.max(Math.floor(configured), 15 * 1000), 10 * 60 * 1000);
 }
 
-function isGmailEmail(email) {
-  if (String(email?.provider || "").toLowerCase() === "gmail") {
+const OUTLOOK_POLL_INTERVAL_MS = getOutlookPollIntervalMs();
+
+function isOutlookLink(link) {
+  const value = String(link || "").toLowerCase();
+  return value.includes("outlook.office.com") || value.includes("outlook.live.com");
+}
+
+function isOutlookEmail(email) {
+  if (String(email?.provider || "").toLowerCase() === "outlook") {
     return true;
   }
 
-  return isGmailLink(email?.mail_link);
+  return isOutlookLink(email?.mail_link);
 }
 
-function mapGmailEmails(rows = []) {
-  return rows
-    .filter((email) => isGmailEmail(email))
-    .map((email) => {
-      let uiPriority = "Low";
-      if (email.priority) {
-        if (email.priority.label === "URGENT" || email.priority.label === "IMPORTANT") uiPriority = "High";
-        else if (email.priority.label === "NORMAL") uiPriority = "Medium";
-      }
-
-      return {
-        id: email.id,
-        subject: email.subject || "(No Subject)",
-        sender: email.sender_email || "Unknown",
-        preview: email.snippet || "",
-        priority: uiPriority,
-        date: email.received_at ? new Date(email.received_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
-        mailLink: email.mail_link || "",
-      };
-    });
-}
-
-function GmailPage() {
-  const { user, gmailConnected } = useAuth();
+function OutlookPage() {
+  const { user, outlookConnected } = useAuth();
   const [searchParams] = useSearchParams();
   const [emails, setEmails] = useState([]);
   const [allEmails, setAllEmails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
-  
+
   const [filter, setFilter] = useState("All");
   const eventSourceRef = useRef(null);
 
-  const fetchGmail = useCallback(async () => {
+  const fetchOutlook = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
     }
-
-    let cachedEmails = [];
-
     try {
+      // Best-effort sync: if provider fetch fails, still show DB-prioritized emails.
+      if (outlookConnected) {
+        try {
+          await api.get(`/outlook/fetch/${user.id}`);
+        } catch (syncError) {
+          console.error("Outlook sync failed, showing cached prioritized emails", syncError);
+        }
+      }
+
       const res = await api.get(`/priority/user/${user.id}/emails`, {
         params: {
           days: RECENT_DAYS,
           limit: RECENT_LIMIT,
           unreadOnly: false,
-          provider: "gmail"
+          provider: "outlook"
         }
       });
-      cachedEmails = mapGmailEmails(res.data.emails || []);
-      setAllEmails(cachedEmails);
-      setEmails(cachedEmails);
+      const mappedEmails = (res.data.emails || [])
+        .filter((e) => isOutlookEmail(e))
+        .map((e) => {
+          let uiPriority = "Low";
+          if (e.priority) {
+            if (e.priority.label === "URGENT" || e.priority.label === "IMPORTANT") uiPriority = "High";
+            else if (e.priority.label === "NORMAL") uiPriority = "Medium";
+          }
 
+          return {
+            id: e.id,
+            subject: e.subject || "(No Subject)",
+            sender: e.sender_email || "Unknown",
+            preview: e.snippet || "",
+            priority: uiPriority,
+            date: e.received_at ? new Date(e.received_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
+            messageLink: e.mail_link || "",
+          };
+        });
+      setAllEmails(mappedEmails);
+      setEmails(mappedEmails);
     } catch (error) {
-      console.error("Failed to fetch gmail", error);
+      console.error("Failed to fetch outlook", error);
     } finally {
       setLoading(false);
     }
-  }, [user, gmailConnected]);
+  }, [user, outlookConnected]);
 
   const runSearch = useCallback(async (queryText) => {
     if (!user) return;
 
     const query = String(queryText || "").trim();
     if (!query) {
-      await fetchGmail();
+      await fetchOutlook();
       return;
     }
 
@@ -98,35 +113,34 @@ function GmailPage() {
           days: RECENT_DAYS,
           limit: RECENT_LIMIT,
           unreadOnly: false,
-          provider: "gmail"
+          provider: "outlook"
         },
       });
 
       const mappedEmails = (res.data.emails || [])
-        .filter((e) => isGmailEmail(e))
+        .filter((e) => isOutlookEmail(e))
         .map((e) => {
-        let uiPriority = "Low";
-        if (e.priority) {
-          if (e.priority.label === "URGENT" || e.priority.label === "IMPORTANT") uiPriority = "High";
-          else if (e.priority.label === "NORMAL") uiPriority = "Medium";
-        }
+          let uiPriority = "Low";
+          if (e.priority) {
+            if (e.priority.label === "URGENT" || e.priority.label === "IMPORTANT") uiPriority = "High";
+            else if (e.priority.label === "NORMAL") uiPriority = "Medium";
+          }
 
-        return {
-          id: e.id,
-          subject: e.subject || "(No Subject)",
-          sender: e.sender_email || "Unknown",
-          preview: e.snippet || "",
-          priority: uiPriority,
-          date: e.received_at ? new Date(e.received_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
-          mailLink: e.mail_link || "",
-        };
-      });
+          return {
+            id: e.id,
+            subject: e.subject || "(No Subject)",
+            sender: e.sender_email || "Unknown",
+            preview: e.snippet || "",
+            priority: uiPriority,
+            date: e.received_at ? new Date(e.received_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
+            messageLink: e.mail_link || "",
+          };
+        });
 
       setEmails(mappedEmails);
     } catch (error) {
       console.error("Failed to search emails", error);
 
-      // Fallback: if search route isn't available in running backend process, filter locally.
       const fallback = allEmails.filter((email) => {
         const haystack = `${email.subject || ""} ${email.sender || ""} ${email.preview || ""}`.toLowerCase();
         return haystack.includes(query.toLowerCase());
@@ -139,9 +153,8 @@ function GmailPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, fetchGmail, allEmails]);
+  }, [user, fetchOutlook, allEmails]);
 
-  // Initial load or header-search driven load.
   useEffect(() => {
     const headerQuery = searchParams.get("q") || "";
     if (headerQuery.trim()) {
@@ -149,12 +162,38 @@ function GmailPage() {
       return;
     }
 
-    fetchGmail();
-  }, [fetchGmail, runSearch, searchParams]);
+    fetchOutlook();
+  }, [fetchOutlook, runSearch, searchParams]);
 
-  // Live updates from backend SSE stream + Pub/Sub watch notifications.
   useEffect(() => {
-    if (!user || !gmailConnected) return;
+    if (!user || !outlookConnected) {
+      return;
+    }
+
+    let inFlight = false;
+
+    const pollOutlook = async () => {
+      if (document.hidden || inFlight) {
+        return;
+      }
+
+      inFlight = true;
+      try {
+        await fetchOutlook();
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const intervalId = window.setInterval(pollOutlook, OUTLOOK_POLL_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [user, outlookConnected, fetchOutlook]);
+
+  useEffect(() => {
+    if (!user || !outlookConnected) return;
 
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -172,11 +211,11 @@ function GmailPage() {
           setToast(`${count} new email${count > 1 ? "s" : ""} received`);
           setTimeout(() => setToast(null), 3500);
         }
-      } catch {
-        // Ignore parse failures; still refresh list.
+      } catch (error) {
+        console.error("Failed to parse stream event", error);
       }
 
-      await fetchGmail();
+      await fetchOutlook();
     });
 
     source.onerror = () => {
@@ -188,35 +227,35 @@ function GmailPage() {
     return () => {
       source.close();
     };
-  }, [user, gmailConnected, fetchGmail]);
+  }, [user, outlookConnected, fetchOutlook]);
 
   const filteredEmails = useMemo(() => {
     if (filter === "All") return emails;
     return emails.filter((email) => email.priority === filter);
   }, [filter, emails]);
 
-  const handleReply = (gmailLink) => {
-    if (!gmailLink) {
-      setToast("Gmail link not available for this email");
+  const handleReply = (messageLink) => {
+    if (!messageLink) {
+      setToast("Outlook link not available for this email");
       setTimeout(() => setToast(null), 3000);
       return;
     }
 
-    window.open(gmailLink, "_blank", "noopener,noreferrer");
+    window.open(messageLink, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <DashboardLayout title="Gmail">
+    <DashboardLayout title="Outlook">
       <section className="grid gap-6 lg:grid-cols-3">
         <div className="col-span-2 space-y-6">
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Gmail status</h2>
-                <p className="mt-1 text-sm text-slate-500">{gmailConnected ? `Connected • Last ${RECENT_DAYS} days • Live updates` : "Gmail not connected"}</p>
+                <h2 className="text-lg font-semibold text-slate-900">Outlook status</h2>
+                <p className="mt-1 text-sm text-slate-500">{outlookConnected ? `Connected • Last ${RECENT_DAYS} days • Live updates` : "Outlook not connected"}</p>
               </div>
               <div className="flex items-center gap-2">
-                {gmailConnected ? (
+                {outlookConnected ? (
                   <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                     <span className="h-2 w-2 rounded-full bg-emerald-600" />
                     Connected
@@ -231,16 +270,10 @@ function GmailPage() {
             </div>
           </div>
 
-          {/* Toast notification */}
           {toast && (
             <div className="px-4 py-2 rounded-xl text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-between animate-pulse">
               <span>{toast}</span>
-              <button onClick={() => setToast(null)} className="ml-3 text-current opacity-50 hover:opacity-100 cursor-pointer">✕</button>
-            </div>
-          )}
-
-          {gmailConnected && (
-            <div>
+              <button onClick={() => setToast(null)} className="ml-3 text-current opacity-50 hover:opacity-100 cursor-pointer">x</button>
             </div>
           )}
 
@@ -275,25 +308,25 @@ function GmailPage() {
             <div className="mt-6 space-y-4">
               {loading ? (
                 <p className="text-gray-500 text-sm">Loading emails...</p>
-              ) : !gmailConnected && filteredEmails.length === 0 ? (
+              ) : !outlookConnected && filteredEmails.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-8 text-center bg-white rounded-2xl shadow-sm border border-gray-100">
                   <div className="bg-indigo-50 text-indigo-600 p-3 rounded-full mb-3">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Connect Your Gmail</h3>
-                  <p className="text-sm text-gray-500 max-w-sm mb-5">To view your emails here, please authorize access to your Google account.</p>
-                  <button 
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Connect Your Outlook</h3>
+                  <p className="text-sm text-gray-500 max-w-sm mb-5">To view your emails here, please authorize access to your Outlook account.</p>
+                  <button
                     onClick={async () => {
-                      try {
-                        const res = await api.get("/gmail/login");
-                        window.location.href = res.data.loginUrl;
-                      } catch (err) {
-                        console.error("Failed to load login URL", err);
+                      const oauthError = await startOAuthLogin("outlook");
+                      if (oauthError) {
+                        console.error("Failed to load Outlook login URL", oauthError);
+                        setToast(oauthError);
+                        setTimeout(() => setToast(null), 3500);
                       }
                     }}
                     className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors border border-transparent"
                   >
-                    Connect Gmail
+                    Connect Outlook
                   </button>
                 </div>
               ) : filteredEmails.map((email) => (
@@ -304,8 +337,8 @@ function GmailPage() {
                     preview={email.preview}
                     priority={email.priority}
                     date={email.date}
-                    app="Gmail"
-                    onReply={() => handleReply(email.mailLink)}
+                    app="Outlook"
+                    onReply={() => handleReply(email.messageLink)}
                   />
                 </div>
               ))}
@@ -330,7 +363,7 @@ function GmailPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-1 h-2 w-2 rounded-full bg-indigo-500" />
-                Reconnect Gmail if you notice missing messages.
+                Reconnect Outlook if you notice missing messages.
               </li>
             </ul>
           </div>
@@ -340,4 +373,4 @@ function GmailPage() {
   );
 }
 
-export default GmailPage;
+export default OutlookPage;

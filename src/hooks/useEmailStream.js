@@ -33,10 +33,10 @@ export const useEmailStream = (userId) => {
     console.log('[useEmailStream] Received new emails:', data);
     if (data.emails && Array.isArray(data.emails)) {
       setNewEmails(prev => {
-        // Avoid duplicates by checking gmail_message_id
-        const existingIds = new Set(prev.map(e => e.gmail_message_id));
+        // Avoid duplicates by checking mail_msg_id
+        const existingIds = new Set(prev.map(e => e.mail_msg_id));
         const uniqueNewEmails = data.emails.filter(
-          e => !existingIds.has(e.gmail_message_id)
+          e => !existingIds.has(e.mail_msg_id)
         );
         return [...uniqueNewEmails, ...prev].slice(0, 100); // Keep last 100
       });

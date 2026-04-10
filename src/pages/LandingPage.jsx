@@ -22,20 +22,20 @@ function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-slate-950 dark:to-slate-900">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-24">
+      <section className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 py-24">
         <div className="max-w-7xl mx-auto grid grid-cols-2 gap-16 items-center px-10">
 
           {/* Left Side */}
           <div className="max-w-lg">
-            <h1 className="text-5xl font-bold text-gray-900 leading-tight">
+            <h1 className="text-5xl font-bold text-gray-900 dark:text-slate-100 leading-tight">
               Prioritize What Matters
             </h1>
 
-            <p className="mt-6 text-lg text-gray-600 max-w-lg">
+            <p className="mt-6 text-lg text-gray-600 dark:text-slate-300 max-w-lg">
               Smart Inbox uses AI to prioritize your Gmail inbox so you can focus
               on the messages that move the needle.
             </p>
@@ -50,7 +50,7 @@ function LandingPage() {
 
               <Link
                 to="/login"
-                className="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 hover:scale-105 transition-all duration-200"
+                className="px-6 py-3 rounded-xl border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800 hover:scale-105 transition-all duration-200"
               >
                 Login
               </Link>
@@ -61,12 +61,12 @@ function LandingPage() {
           <div className="relative flex justify-center">
             <div className="absolute w-72 h-72 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur-3xl opacity-30"></div>
 
-            <div className="relative bg-white rounded-2xl shadow-xl p-6 w-[380px] hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 w-[380px] hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-transparent dark:border-slate-700">
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-gray-900">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100">
                   Live Example
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
                   Your inbox with AI prioritization
                 </p>
               </div>
@@ -75,13 +75,13 @@ function LandingPage() {
                 {emails.map((e) => (
                   <div
                     key={e.id}
-                    className="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-3 hover:bg-gray-100 transition cursor-pointer"
+                    className="flex justify-between items-center bg-gray-50 dark:bg-slate-800 rounded-lg px-4 py-3 hover:bg-gray-100 dark:hover:bg-slate-700 transition cursor-pointer"
                   >
                     <div>
-                      <div className="text-sm font-semibold text-gray-900">
+                      <div className="text-sm font-semibold text-gray-900 dark:text-slate-100">
                         {e.subject}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 dark:text-slate-400">
                         from: sender@example.com
                       </div>
                     </div>
@@ -119,7 +119,7 @@ function LandingPage() {
                           </span>
                         )
                       ) : (
-                        <span className="text-gray-400 text-xs font-medium">
+                        <span className="text-gray-400 dark:text-slate-500 text-xs font-medium">
                           —
                         </span>
                       )}
@@ -151,9 +151,9 @@ function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="bg-white py-16">
+      <section className="bg-white dark:bg-slate-900 py-16">
         <div className="max-w-7xl mx-auto px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100 text-center mb-12">
             Features
           </h2>
 
@@ -190,17 +190,17 @@ function LandingPage() {
       </section>
 
       {/* About Section */}
-      <section className="bg-white py-24">
+      <section className="bg-white dark:bg-slate-900 py-24">
         <div className="max-w-7xl mx-auto px-10">
           <div className="grid grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100">
                 About Smart Inbox
               </h2>
-              <p className="mt-6 text-gray-600 text-lg leading-relaxed">
+              <p className="mt-6 text-gray-600 dark:text-slate-300 text-lg leading-relaxed">
                 Smart Inbox is designed to help professionals focus on what truly matters. By using AI-powered prioritization, the platform analyzes incoming emails and highlights the most important messages so you can spend less time sorting and more time acting.
               </p>
-              <ul className="mt-6 space-y-3 text-gray-700">
+              <ul className="mt-6 space-y-3 text-gray-700 dark:text-slate-300">
                 <li>• AI-powered email prioritization</li>
                 <li>• Smart summaries of long conversations</li>
                 <li>• Seamless Gmail integration</li>

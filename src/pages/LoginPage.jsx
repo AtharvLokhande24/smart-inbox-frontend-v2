@@ -1,18 +1,28 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { FcGoogle } from "react-icons/fc";
+import { FaMicrosoft } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { startOAuthLogin } from "../services/oauth";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [searchParams] = useSearchParams();
   
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  React.useEffect(() => {
+    const oauthError = searchParams.get("oauthError");
+    if (oauthError) {
+      setError(oauthError);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,11 +41,16 @@ function LoginPage() {
   };
 
   async function handleGoogleLogin() {
-    try {
-      const res = await api.get("/gmail/login");
-      window.location.href = res.data.loginUrl;
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to start Google login.");
+    const oauthError = await startOAuthLogin("gmail");
+    if (oauthError) {
+      setError(oauthError);
+    }
+  }
+
+  async function handleOutlookLogin() {
+    const oauthError = await startOAuthLogin("outlook");
+    if (oauthError) {
+      setError(oauthError);
     }
   }
 
@@ -90,6 +105,13 @@ function LoginPage() {
               className="flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition transform hover:scale-105"
             >
               <FcGoogle size={20} /> Continue with Google
+            </button>
+            <button
+              onClick={handleOutlookLogin}
+              type="button"
+              className="flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition transform hover:scale-105"
+            >
+              <FaMicrosoft size={18} className="text-blue-600" /> Continue with Outlook
             </button>
           </div>
 

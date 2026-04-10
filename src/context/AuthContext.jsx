@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [gmailConnected, setGmailConnected] = useState(false);
+  const [outlookConnected, setOutlookConnected] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // On mount, validate JWT by fetching the persisted user from protected /users/:id.
@@ -16,6 +17,7 @@ export const AuthProvider = ({ children }) => {
         if (!storedUser?.id) {
           setUser(null);
           setGmailConnected(false);
+          setOutlookConnected(false);
           localStorage.removeItem("user");
           return;
         }
@@ -30,12 +32,14 @@ export const AuthProvider = ({ children }) => {
         };
 
         setUser(normalizedUser);
-        setGmailConnected(Boolean(userFromApi?.google_id));
+        setGmailConnected(Boolean(userFromApi?.gmailConnected));
+        setOutlookConnected(Boolean(userFromApi?.outlookConnected));
         localStorage.setItem("user", JSON.stringify(normalizedUser));
       } catch {
         // JWT expired or missing – clear any stale local data
         setUser(null);
         setGmailConnected(false);
+        setOutlookConnected(false);
         localStorage.removeItem("user");
       } finally {
         setLoading(false);
@@ -52,7 +56,8 @@ export const AuthProvider = ({ children }) => {
     };
 
     setUser(normalizedUser);
-    setGmailConnected(Boolean(userData.gmailConnected || userData.google_id));
+    setGmailConnected(Boolean(userData.gmailConnected));
+    setOutlookConnected(Boolean(userData.outlookConnected));
     localStorage.setItem("user", JSON.stringify(normalizedUser));
   };
 
@@ -76,6 +81,7 @@ export const AuthProvider = ({ children }) => {
       await api.post("/auth/logout");
       setUser(null);
       setGmailConnected(false);
+      setOutlookConnected(false);
       localStorage.removeItem("user");
     } catch (err) {
       console.error("Logout failed:", err);
@@ -83,7 +89,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, gmailConnected, loading, login, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, gmailConnected, outlookConnected, loading, login, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

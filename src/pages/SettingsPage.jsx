@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { HiOutlineMail } from "react-icons/hi";
 import DashboardLayout from "../components/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
+import useDarkMode from "../hooks/useDarkMode";
+import { startOAuthLogin } from "../services/oauth";
 
 function SettingsPage() {
   const navigate = useNavigate(); 
-  const { user, gmailConnected } = useAuth();
+  const { user, gmailConnected, outlookConnected } = useAuth();
 
   const userName = user?.name || "User";
   const userEmail = user?.email || "";
@@ -14,7 +16,26 @@ function SettingsPage() {
 
   const [autoPrioritization, setAutoPrioritization] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useDarkMode();
+  const [connectingProvider, setConnectingProvider] = useState("");
+  const [connectionError, setConnectionError] = useState("");
+
+  async function startProviderConnect(provider) {
+    try {
+      setConnectionError("");
+      setConnectingProvider(provider);
+      const oauthError = await startOAuthLogin(provider);
+
+      if (oauthError) {
+        throw new Error(oauthError);
+      }
+    } catch (err) {
+      setConnectionError(err.response?.data?.error || err.message || "Failed to start account connection.");
+      setConnectingProvider("");
+    }
+  }
+
+  const anyConnected = gmailConnected || outlookConnected;
   
   return (
     <DashboardLayout title="Settings">
@@ -55,12 +76,12 @@ function SettingsPage() {
             </div>
 
             <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
-              gmailConnected
+              anyConnected
                 ? "bg-emerald-50 text-emerald-700"
                 : "bg-amber-50 text-amber-700"
             }`}>
-              <span className={`h-2 w-2 rounded-full ${gmailConnected ? "bg-emerald-600" : "bg-amber-500"}`} />
-              {gmailConnected ? "Connected" : "Not Connected"}
+              <span className={`h-2 w-2 rounded-full ${anyConnected ? "bg-emerald-600" : "bg-amber-500"}`} />
+              {anyConnected ? "Connected" : "Not Connected"}
             </span>
           </div>
 
@@ -72,13 +93,42 @@ function SettingsPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Gmail</p>
-                  <p className="text-xs text-slate-500">Connected</p>
+                  <p className="text-xs text-slate-500">{gmailConnected ? "Connected" : "Not connected"}</p>
                 </div>
               </div>
-              <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
-                Reconnect
+              <button
+                type="button"
+                onClick={() => startProviderConnect("gmail")}
+                disabled={connectingProvider === "gmail"}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {connectingProvider === "gmail" ? "Connecting..." : (gmailConnected ? "Reconnect" : "Connect")}
               </button>
             </div>
+
+            <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white">
+                  <HiOutlineMail className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Outlook</p>
+                  <p className="text-xs text-slate-500">{outlookConnected ? "Connected" : "Not connected"}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => startProviderConnect("outlook")}
+                disabled={connectingProvider === "outlook"}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {connectingProvider === "outlook" ? "Connecting..." : (outlookConnected ? "Reconnect" : "Connect")}
+              </button>
+            </div>
+
+            {connectionError ? (
+              <p className="text-xs text-red-600">{connectionError}</p>
+            ) : null}
           </div>
         </section>
 

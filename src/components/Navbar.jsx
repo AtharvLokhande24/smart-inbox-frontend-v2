@@ -6,7 +6,7 @@ function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 border-b border-gray-200">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-slate-950/80 border-b border-gray-200 dark:border-slate-800">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-4">
 
         {/* LOGO */}
@@ -24,8 +24,8 @@ function Navbar() {
             to="/features"
             className={`relative font-medium transition ${
               isActive("/features")
-                ? "text-indigo-600"
-                : "text-gray-600 hover:text-gray-900"
+                ? "text-indigo-600 dark:text-indigo-300"
+                : "text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100"
             }`}
           >
             Features
@@ -38,8 +38,8 @@ function Navbar() {
             to="/pricing"
             className={`relative font-medium transition ${
               isActive("/pricing")
-                ? "text-indigo-600"
-                : "text-gray-600 hover:text-gray-900"
+                ? "text-indigo-600 dark:text-indigo-300"
+                : "text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100"
             }`}
           >
             Pricing

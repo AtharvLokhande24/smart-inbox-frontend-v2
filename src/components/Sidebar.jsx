@@ -11,6 +11,7 @@ import {
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: HiOutlineHome },
   { label: "Gmail", to: "/gmail", icon: HiOutlineMail },
+  { label: "Outlook", to: "/outlook", icon: HiOutlineMail },
   { label: "Settings", to: "/settings", icon: HiOutlineCog },
 ];
 
@@ -31,7 +32,7 @@ function Sidebar() {
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen flex flex-col justify-between bg-white border-r border-gray-200 transition-all duration-300 ease-in-out ${
+      className={`fixed top-0 left-0 h-screen flex flex-col justify-between bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 transition-all duration-300 ease-in-out ${
         collapsed ? "w-20" : "w-64"
       }`}
       style={{
@@ -50,16 +51,16 @@ function Sidebar() {
         <button
           type="button"
           onClick={handleToggle}
-          className="p-2 rounded-md hover:bg-gray-100 transition"
+          className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 transition"
           aria-label="Toggle sidebar"
         >
-          <HiOutlineMenu className="text-xl text-gray-600" />
+          <HiOutlineMenu className="text-xl text-gray-600 dark:text-slate-300" />
         </button>
 
         {!collapsed ? (
           <div className="flex flex-col leading-tight">
-            <p className="font-semibold text-lg text-slate-900">Smart Inbox</p>
-            <p className="text-sm text-gray-500">Priority email workspace</p>
+            <p className="font-semibold text-lg text-slate-900 dark:text-slate-100">Smart Inbox</p>
+            <p className="text-sm text-gray-500 dark:text-slate-400">Priority email workspace</p>
           </div>
         ) : null}
       </div>
@@ -81,8 +82,8 @@ function Sidebar() {
                       collapsed ? "justify-center" : "justify-start"
                     } gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                       isActive
-                        ? "bg-indigo-100 text-indigo-600"
-                        : "text-slate-700 hover:bg-gray-100"
+                        ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300"
+                        : "text-slate-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
                     }`
                   }
                 >
@@ -106,7 +107,7 @@ function Sidebar() {
           onClick={handleSignOut}
           className={`flex items-center ${
             collapsed ? "justify-center" : "justify-start"
-          } gap-3 w-full rounded-lg px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors`}
+          } gap-3 w-full rounded-lg px-4 py-3 text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors`}
         >
           <HiOutlineLogout className="text-xl" />
           <span className={`${collapsed ? "hidden" : "block"}`}>Sign Out</span>

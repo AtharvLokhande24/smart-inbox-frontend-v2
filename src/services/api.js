@@ -53,6 +53,7 @@ const api = axios.create({
 });
 
 let refreshPromise = null;
+let sessionExpiryHandled = false;
 
 function getStoredUserId() {
   try {
@@ -60,6 +61,23 @@ function getStoredUserId() {
     return storedUser?.id || null;
   } catch {
     return null;
+  }
+}
+
+function handleSessionExpired(message = "Your session has expired. Please login again.") {
+  if (sessionExpiryHandled) {
+    return;
+  }
+
+  sessionExpiryHandled = true;
+  localStorage.removeItem("user");
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("session-expired", {
+        detail: { message }
+      })
+    );
   }
 }
 
@@ -86,7 +104,31 @@ api.interceptors.response.use(
       }
     }
 
-    const isRefreshEndpoint = String(originalRequest.url || "").includes("/gmail/auth/refresh");
+    const requestPath = String(originalRequest.url || "");
+    const normalizedRequestPath = requestPath.split("?")[0];
+    const isOauthBootstrapEndpoint =
+      normalizedRequestPath === "/gmail/login" ||
+      normalizedRequestPath === "/outlook/login" ||
+      normalizedRequestPath === "/google/login";
+    const isRecoverableRouteError = status === 404 || status === 405;
+
+    if (isOauthBootstrapEndpoint && isRecoverableRouteError && !hasRetriedBaseUrl && currentBaseUrl) {
+      const alternateBaseUrl = getAlternateBaseUrl(currentBaseUrl);
+      if (alternateBaseUrl) {
+        api.defaults.baseURL = alternateBaseUrl;
+        localStorage.setItem("apiBaseUrl", alternateBaseUrl);
+
+        originalRequest._baseRetried = true;
+        originalRequest.baseURL = alternateBaseUrl;
+
+        return api(originalRequest);
+      }
+    }
+
+    const requestUrl = requestPath;
+    const isRefreshEndpoint =
+      requestUrl.includes("/gmail/auth/refresh") ||
+      requestUrl.includes("/outlook/auth/refresh");
     const shouldTryRefresh =
       status === 401 &&
       !originalRequest._retry &&
@@ -107,18 +149,29 @@ api.interceptors.response.use(
       if (!refreshPromise) {
         const normalizedActive = normalizeBaseUrl(api.defaults.baseURL);
         const activeBaseUrl = normalizedActive || DEFAULT_API_BASE_URL;
-        refreshPromise = axios.post(
-          `${activeBaseUrl}/gmail/auth/refresh`,
-          { userId },
-          { withCredentials: true }
-        );
+
+        refreshPromise = (async () => {
+          try {
+            await axios.post(
+              `${activeBaseUrl}/gmail/auth/refresh`,
+              { userId },
+              { withCredentials: true }
+            );
+            return;
+          } catch {
+            await axios.post(
+              `${activeBaseUrl}/outlook/auth/refresh`,
+              { userId },
+              { withCredentials: true }
+            );
+          }
+        })();
       }
 
       await refreshPromise;
       return api(originalRequest);
     } catch (refreshError) {
-      // If refresh fails, clear stale local auth state and propagate error.
-      localStorage.removeItem("user");
+      handleSessionExpired();
       return Promise.reject(refreshError);
     } finally {
       refreshPromise = null;
