@@ -93,7 +93,7 @@ const Dashboard = () => {
           id: e.id,
           subject: e.subject || "(No Subject)",
           sender: e.sender_email || "Unknown",
-          app: String(e.provider || "gmail").toLowerCase() === "outlook" ? "Outlook" : "Gmail",
+          app: e.source || (String(e.provider || "gmail").toLowerCase() === "outlook" ? "Outlook" : "Gmail"),
           preview: e.snippet || "",
           priority: uiPriority,
           mailLink: e.mail_link || "",

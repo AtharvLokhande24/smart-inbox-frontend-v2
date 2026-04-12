@@ -34,6 +34,7 @@ function mapGmailEmails(rows = []) {
         id: email.id,
         subject: email.subject || "(No Subject)",
         sender: email.sender_email || "Unknown",
+        app: email.source || "gmail",
         preview: email.snippet || "",
         priority: uiPriority,
         date: email.received_at ? new Date(email.received_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
@@ -115,6 +116,7 @@ function GmailPage() {
           id: e.id,
           subject: e.subject || "(No Subject)",
           sender: e.sender_email || "Unknown",
+          app: e.source || "gmail",
           preview: e.snippet || "",
           priority: uiPriority,
           date: e.received_at ? new Date(e.received_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
@@ -304,7 +306,7 @@ function GmailPage() {
                     preview={email.preview}
                     priority={email.priority}
                     date={email.date}
-                    app="Gmail"
+                    app={email.app || "Gmail"}
                     onReply={() => handleReply(email.mailLink)}
                   />
                 </div>
