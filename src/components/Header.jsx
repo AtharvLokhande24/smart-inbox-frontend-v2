@@ -1,15 +1,21 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { HiOutlineSearch, HiOutlineBell } from "react-icons/hi";
+import { HiOutlineSearch } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
 
 export default function Header({ title }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  })();
 
-  const userName = user?.name || "User";
-  const userEmail = user?.email || "";
+  const userName = user?.name || storedUser?.name || "User";
   const userInitial = userName.charAt(0).toUpperCase();
 
   const subtitle = {
@@ -68,15 +74,6 @@ export default function Header({ title }) {
       {/* RIGHT */}
       <div className="flex items-center gap-4">
 
-        {/* NOTIFICATION */}
-        <button
-          onClick={() => navigate("/notifications")}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition relative"
-        >
-          <HiOutlineBell className="text-gray-600 dark:text-slate-300 text-lg" />
-          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500" />
-        </button>
-
         {/* PROFILE */}
         <button
           onClick={() => navigate("/profile")}
@@ -84,7 +81,6 @@ export default function Header({ title }) {
         >
           <div className="text-right">
             <p className="text-sm font-medium text-gray-800 dark:text-slate-100">{userName}</p>
-            <p className="text-xs text-gray-500 dark:text-slate-400">{userEmail}</p>
           </div>
 
           <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-semibold text-white">

@@ -3,6 +3,38 @@ import api from "../services/api";
 
 const AuthContext = createContext(null);
 
+function deriveConnections(userData = {}) {
+  const accounts = Array.isArray(userData.accounts) ? userData.accounts : [];
+  const providers = new Set(
+    accounts.map((account) => String(account?.provider || "").trim().toLowerCase())
+  );
+
+  const gmailConnected =
+    typeof userData.gmailConnected === "boolean"
+      ? userData.gmailConnected
+      : providers.has("gmail");
+
+  const outlookConnected =
+    typeof userData.outlookConnected === "boolean"
+      ? userData.outlookConnected
+      : providers.has("outlook");
+
+  return { gmailConnected, outlookConnected };
+}
+
+function getDisplayName(userData = {}) {
+  const accounts = Array.isArray(userData.accounts) ? userData.accounts : [];
+  const primaryAccount = accounts.find((account) => account?.is_primary) || accounts[0] || null;
+  const accountName = primaryAccount?.display_name || primaryAccount?.email?.split("@")[0] || null;
+  const rawName = String(userData.name || "").trim();
+
+  if (rawName && rawName.toLowerCase() !== "user") {
+    return rawName;
+  }
+
+  return accountName || rawName || "User";
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [gmailConnected, setGmailConnected] = useState(false);
@@ -12,8 +44,8 @@ export const AuthProvider = ({ children }) => {
   // On mount, validate JWT by fetching the persisted user from protected /users/:id.
   useEffect(() => {
     async function checkAuth() {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
       try {
-        const storedUser = JSON.parse(localStorage.getItem("user") || "null");
         if (!storedUser?.id) {
           setUser(null);
           setGmailConnected(false);
@@ -27,20 +59,37 @@ export const AuthProvider = ({ children }) => {
 
         const normalizedUser = {
           id: userFromApi.id,
-          name: userFromApi.name,
+          name: getDisplayName(userFromApi),
           email: userFromApi.email,
+          accounts: Array.isArray(userFromApi.accounts) ? userFromApi.accounts : [],
         };
+        const { gmailConnected, outlookConnected } = deriveConnections(userFromApi);
 
         setUser(normalizedUser);
-        setGmailConnected(Boolean(userFromApi?.gmailConnected));
-        setOutlookConnected(Boolean(userFromApi?.outlookConnected));
+        setGmailConnected(gmailConnected);
+        setOutlookConnected(outlookConnected);
         localStorage.setItem("user", JSON.stringify(normalizedUser));
       } catch {
-        // JWT expired or missing – clear any stale local data
-        setUser(null);
-        setGmailConnected(false);
-        setOutlookConnected(false);
-        localStorage.removeItem("user");
+        // Keep the stored user so the UI can still show the last known profile/accounts.
+        if (storedUser?.id) {
+          const fallbackUser = {
+            id: storedUser.id,
+            name: getDisplayName(storedUser),
+            email: storedUser.email,
+            accounts: Array.isArray(storedUser.accounts) ? storedUser.accounts : [],
+          };
+          const { gmailConnected, outlookConnected } = deriveConnections(fallbackUser);
+
+          setUser(fallbackUser);
+          setGmailConnected(gmailConnected);
+          setOutlookConnected(outlookConnected);
+          localStorage.setItem("user", JSON.stringify(fallbackUser));
+        } else {
+          setUser(null);
+          setGmailConnected(false);
+          setOutlookConnected(false);
+          localStorage.removeItem("user");
+        }
       } finally {
         setLoading(false);
       }
@@ -51,13 +100,15 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => {
     const normalizedUser = {
       id: userData.id,
-      name: userData.name,
+      name: getDisplayName(userData),
       email: userData.email,
+      accounts: Array.isArray(userData.accounts) ? userData.accounts : [],
     };
+    const { gmailConnected, outlookConnected } = deriveConnections(userData);
 
     setUser(normalizedUser);
-    setGmailConnected(Boolean(userData.gmailConnected));
-    setOutlookConnected(Boolean(userData.outlookConnected));
+    setGmailConnected(gmailConnected);
+    setOutlookConnected(outlookConnected);
     localStorage.setItem("user", JSON.stringify(normalizedUser));
   };
 

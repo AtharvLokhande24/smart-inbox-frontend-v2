@@ -3,19 +3,17 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { FcGoogle } from "react-icons/fc";
 import { FaMicrosoft } from "react-icons/fa";
+import { startOAuthLogin } from "../services/oauth";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
-import { startOAuthLogin } from "../services/oauth";
 
 function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -36,7 +34,7 @@ function RegisterPage() {
     try {
       const response = await api.post("/auth/register", { name, email, password });
       login(response.data.user);
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || "Registration failed. Please try again.");
     } finally {
@@ -45,16 +43,20 @@ function RegisterPage() {
   };
 
   async function handleGoogleLogin() {
+    setIsLoading(true);
     const oauthError = await startOAuthLogin("gmail");
     if (oauthError) {
       setError(oauthError);
+      setIsLoading(false);
     }
   }
 
   async function handleOutlookLogin() {
+    setIsLoading(true);
     const oauthError = await startOAuthLogin("outlook");
     if (oauthError) {
       setError(oauthError);
+      setIsLoading(false);
     }
   }
 
@@ -65,7 +67,7 @@ function RegisterPage() {
       <div className="flex flex-1 items-center justify-center py-12 px-6 lg:px-8">
         <div className="bg-white shadow-lg rounded-2xl p-10 w-full max-w-md">
           <h2 className="text-2xl font-semibold mb-6 text-center">
-            Create your account
+            Create your InboxIQ account
           </h2>
 
           {error && (
@@ -111,8 +113,8 @@ function RegisterPage() {
               required
             />
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
               className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition mb-4 disabled:bg-indigo-400"
             >
@@ -120,26 +122,28 @@ function RegisterPage() {
             </button>
           </form>
 
-          <div className="relative flex items-center mb-4 border-t pt-5">
-             <div className="flex-grow border-t border-gray-200"></div>
-          </div>
+          <p className="mb-5 text-sm text-slate-600 text-center">
+            You can also start with Google or Outlook and link more inboxes later.
+          </p>
 
           <button 
             type="button"
-            onClick={handleGoogleLogin} 
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 mb-3 hover:bg-gray-50 transition transform hover:scale-105"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 mb-3 hover:bg-gray-50 transition disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <FcGoogle size={20} />
-            Continue with Google
+            {isLoading ? "Redirecting..." : "Continue with Google"}
           </button>
 
           <button
             type="button"
             onClick={handleOutlookLogin}
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 mb-3 hover:bg-gray-50 transition transform hover:scale-105"
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 mb-3 hover:bg-gray-50 transition disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <FaMicrosoft size={18} className="text-blue-600" />
-            Continue with Outlook
+            {isLoading ? "Redirecting..." : "Continue with Outlook"}
           </button>
 
           <p className="text-center text-sm text-gray-600 mt-6">

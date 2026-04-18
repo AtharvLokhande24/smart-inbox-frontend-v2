@@ -68,6 +68,7 @@ function EmailCard({
 
         {/* Reply Button - Bottom Right, Hidden by default */}
         <button
+          type="button"
           onClick={handleReply}
           className="opacity-0 translate-y-1 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200 text-sm px-3 py-1 rounded-md bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >

@@ -3,9 +3,9 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { FcGoogle } from "react-icons/fc";
 import { FaMicrosoft } from "react-icons/fa";
+import { startOAuthLogin } from "../services/oauth";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
-import { startOAuthLogin } from "../services/oauth";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,7 +13,6 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [searchParams] = useSearchParams();
-  
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -32,7 +31,7 @@ function LoginPage() {
     try {
       const response = await api.post("/auth/login", { email, password });
       login(response.data.user);
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || "Failed to login. Please try again.");
     } finally {
@@ -41,16 +40,20 @@ function LoginPage() {
   };
 
   async function handleGoogleLogin() {
+    setIsLoading(true);
     const oauthError = await startOAuthLogin("gmail");
     if (oauthError) {
       setError(oauthError);
+      setIsLoading(false);
     }
   }
 
   async function handleOutlookLogin() {
+    setIsLoading(true);
     const oauthError = await startOAuthLogin("outlook");
     if (oauthError) {
       setError(oauthError);
+      setIsLoading(false);
     }
   }
 
@@ -61,7 +64,7 @@ function LoginPage() {
       <div className="flex flex-1 items-center justify-center py-12 px-4">
         <div className="bg-white shadow-lg rounded-2xl p-10 w-full max-w-md">
           <h2 className="text-2xl font-semibold mb-6 text-center">
-            Login to your account
+            Sign in to InboxIQ
           </h2>
 
           {error && (
@@ -89,8 +92,8 @@ function LoginPage() {
               required
             />
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
               className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition disabled:bg-indigo-400"
             >
@@ -98,27 +101,32 @@ function LoginPage() {
             </button>
           </form>
 
-          <div className="flex flex-col gap-3 mt-6 border-t pt-6">
-            <button 
-              onClick={handleGoogleLogin} 
-              type="button"
-              className="flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition transform hover:scale-105"
-            >
-              <FcGoogle size={20} /> Continue with Google
-            </button>
-            <button
-              onClick={handleOutlookLogin}
-              type="button"
-              className="flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition transform hover:scale-105"
-            >
-              <FaMicrosoft size={18} className="text-blue-600" /> Continue with Outlook
-            </button>
-          </div>
+          <p className="my-5 text-sm text-slate-600 text-center">
+            You can also sign in with any Gmail or Outlook account linked to your profile.
+          </p>
+
+          <button
+            onClick={handleGoogleLogin}
+            type="button"
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            <FcGoogle size={20} /> {isLoading ? "Redirecting..." : "Continue with Google"}
+          </button>
+
+          <button
+            onClick={handleOutlookLogin}
+            type="button"
+            disabled={isLoading}
+            className="mt-3 w-full flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            <FaMicrosoft size={18} className="text-blue-600" /> {isLoading ? "Redirecting..." : "Continue with Outlook"}
+          </button>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Don't have an account?{' '}
+            New here?{' '}
             <Link to="/register" className="text-indigo-600 font-medium hover:underline">
-              Register
+              Create account with Google
             </Link>
           </p>
         </div>

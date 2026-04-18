@@ -129,8 +129,10 @@ api.interceptors.response.use(
     const isRefreshEndpoint =
       requestUrl.includes("/gmail/auth/refresh") ||
       requestUrl.includes("/outlook/auth/refresh");
+    const isTokenExpiredError = error.response?.data?.code === "TOKEN_EXPIRED";
     const shouldTryRefresh =
       status === 401 &&
+      isTokenExpiredError &&
       !originalRequest._retry &&
       !isRefreshEndpoint;
 

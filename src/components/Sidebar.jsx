@@ -7,6 +7,7 @@ import {
   HiOutlineMenu,
   HiOutlineLogout,
 } from "react-icons/hi";
+import { useAuth } from "../context/AuthContext";
 
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: HiOutlineHome },
@@ -18,6 +19,7 @@ const navItems = [
 function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const widthValue = collapsed ? "5rem" : "16rem";
@@ -25,9 +27,9 @@ function Sidebar() {
   }, [collapsed]);
 
   const handleToggle = () => setCollapsed((prev) => !prev);
-  const handleSignOut = () => {
-    // TODO: hook into real auth flow
-    navigate("/login");
+  const handleSignOut = async () => {
+    await logout();
+    navigate("/login", { replace: true });
   };
 
   return (

@@ -17,7 +17,6 @@ function ProfilePage() {
   const [formData, setFormData] = useState({
     firstName: defaultFirst,
     lastName: defaultLast,
-    email: user?.email || "",
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -43,7 +42,6 @@ function ProfilePage() {
           setFormData({
             firstName: profileFirst,
             lastName: profileLast,
-            email: profile.email || ""
           });
         }
       } catch (error) {
@@ -75,7 +73,6 @@ function ProfilePage() {
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
       const payload = {
         name: fullName,
-        email: formData.email,
       };
 
       console.log(`[ProfilePage] Saving profile for user ${user.id}:`, payload);
@@ -125,9 +122,8 @@ function ProfilePage() {
               <h2 className="text-2xl font-bold text-slate-900">
                 {formData.firstName} {formData.lastName}
               </h2>
-              <p className="text-sm text-slate-500 mt-1">{formData.email}</p>
               <p className="mt-3 text-xs text-slate-500">
-                Profile supports name and email fields from backend model.
+                Profile supports name updates.
               </p>
             </div>
           </div>
@@ -168,22 +164,6 @@ function ProfilePage() {
                   type="text"
                   name="lastName"
                   value={formData.lastName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                 />
