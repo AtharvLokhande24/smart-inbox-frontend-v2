@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { HiOutlineSearch } from "react-icons/hi";
+import { HiOutlineSearch, HiOutlineBell } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
+import { getNotifications } from "../services/api";
 
 export default function Header({ title }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
   const storedUser = (() => {
     try {
       return JSON.parse(localStorage.getItem("user") || "null");
@@ -22,6 +24,7 @@ export default function Header({ title }) {
     Dashboard: "Your AI-prioritized inbox — focus on what matters most.",
     Gmail: "Your Gmail inbox prioritized by AI.",
     Outlook: "Your Outlook inbox prioritized by AI.",
+    Tasks: "Manage your synced tasks and calendar events.",
     Settings: "Manage account settings and integrations.",
     "Edit Profile": "Update your personal and professional information.",
     Notifications: "Stay updated with all your notifications.",
@@ -38,6 +41,40 @@ export default function Header({ title }) {
 
     navigate(`/gmail?q=${encodeURIComponent(query)}`);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadUnreadCount() {
+      if (!user?.id) {
+        if (isMounted) {
+          setUnreadCount(0);
+        }
+        return;
+      }
+
+      try {
+        const res = await getNotifications();
+        const list = Array.isArray(res.data?.notifications) ? res.data.notifications : [];
+        if (isMounted) {
+          setUnreadCount(list.filter((notification) => !notification.read).length);
+        }
+      } catch {
+        if (isMounted) {
+          setUnreadCount(0);
+        }
+      }
+    }
+
+    loadUnreadCount();
+
+    const timer = setInterval(loadUnreadCount, 15000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, [user?.id]);
 
   return (
     <header className="flex items-center justify-between border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 py-4">
@@ -73,6 +110,22 @@ export default function Header({ title }) {
 
       {/* RIGHT */}
       <div className="flex items-center gap-4">
+
+        {/* NOTIFICATIONS */}
+        <button
+          type="button"
+          onClick={() => navigate("/notifications")}
+          className="relative p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition"
+          aria-label="Open notifications"
+          title="Notifications"
+        >
+          <HiOutlineBell className="text-2xl text-gray-600 dark:text-slate-300" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] leading-[18px] font-semibold text-center">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </button>
 
         {/* PROFILE */}
         <button

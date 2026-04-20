@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [toast, setToast] = useState(null);
+  const [autoTaskBusyId, setAutoTaskBusyId] = useState(null);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const eventSourceRef = useRef(null);
@@ -179,6 +180,26 @@ const Dashboard = () => {
     window.open(messageLink, "_blank", "noopener,noreferrer");
   };
 
+  const handleAutoTask = async (emailId) => {
+    try {
+      setAutoTaskBusyId(emailId);
+      const res = await api.post(`/tasks/auto/${emailId}`);
+      const ok = Boolean(res?.data?.success);
+
+      if (ok) {
+        setToast("Auto task created successfully.");
+      } else {
+        setToast(res?.data?.message || "No actionable task/event detected for this email.");
+      }
+    } catch (error) {
+      console.error("Failed to auto create task", error);
+      setToast(error?.response?.data?.error || "Failed to create auto task.");
+    } finally {
+      setTimeout(() => setToast(null), 3500);
+      setAutoTaskBusyId(null);
+    }
+  };
+
   return (
     <DashboardLayout title="Dashboard">
       <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-6 px-2">
@@ -266,12 +287,15 @@ const Dashboard = () => {
                   <div key={email.id} className="group">
                     <div className="transition-all duration-300 hover:scale-[1.01] hover:shadow-md rounded-xl">
                       <EmailCard
+                        id={email.id}
                         subject={email.subject}
                         sender={email.sender}
                         preview={email.preview}
                         priority={email.priority}
                         app={email.app}
                         onReply={() => handleReply(email.mailLink)}
+                        onAutoTask={handleAutoTask}
+                        autoTaskBusy={autoTaskBusyId === email.id}
                       />
                     </div>
                   </div>

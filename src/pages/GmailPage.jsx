@@ -50,6 +50,7 @@ function GmailPage() {
   const [allEmails, setAllEmails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const [autoTaskBusyId, setAutoTaskBusyId] = useState(null);
   
   const [filter, setFilter] = useState("All");
   const eventSourceRef = useRef(null);
@@ -207,10 +208,30 @@ function GmailPage() {
     window.open(gmailLink, "_blank", "noopener,noreferrer");
   };
 
+  const handleAutoTask = async (emailId) => {
+    try {
+      setAutoTaskBusyId(emailId);
+      const res = await api.post(`/tasks/auto/${emailId}`);
+      const ok = Boolean(res?.data?.success);
+
+      if (ok) {
+        setToast("Auto task created successfully.");
+      } else {
+        setToast(res?.data?.message || "No actionable task/event detected for this email.");
+      }
+    } catch (error) {
+      console.error("Failed to auto create task", error);
+      setToast(error?.response?.data?.error || "Failed to create auto task.");
+    } finally {
+      setTimeout(() => setToast(null), 3500);
+      setAutoTaskBusyId(null);
+    }
+  };
+
   return (
     <DashboardLayout title="Gmail">
-      <section className="grid gap-6 lg:grid-cols-3">
-        <div className="col-span-2 space-y-6">
+      <section className="grid gap-6 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-8">
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -301,6 +322,7 @@ function GmailPage() {
               ) : filteredEmails.map((email) => (
                 <div key={email.id}>
                   <EmailCard
+                    id={email.id}
                     subject={email.subject}
                     sender={email.sender}
                     preview={email.preview}
@@ -308,6 +330,8 @@ function GmailPage() {
                     date={email.date}
                     app={email.app || "Gmail"}
                     onReply={() => handleReply(email.mailLink)}
+                    onAutoTask={handleAutoTask}
+                    autoTaskBusy={autoTaskBusyId === email.id}
                   />
                 </div>
               ))}
@@ -318,25 +342,29 @@ function GmailPage() {
           </div>
         </div>
 
-        <aside className="space-y-6">
+        <aside className="lg:col-span-4">
           <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Quick tips</h2>
-            <ul className="mt-4 space-y-3 text-sm text-slate-600">
-              <li className="flex items-start gap-2">
-                <span className="mt-1 h-2 w-2 rounded-full bg-indigo-500" />
-                Use filters to see only high priority messages.
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 h-2 w-2 rounded-full bg-indigo-500" />
-                Mark messages as starred to surface them later.
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 h-2 w-2 rounded-full bg-indigo-500" />
-                Reconnect Gmail if you notice missing messages.
-              </li>
-            </ul>
+            <h2 className="text-lg font-semibold text-slate-900">AI Insights</h2>
+            <p className="mt-1 text-sm text-slate-500">Quick insights to help you stay on top of your inbox.</p>
+
+            <div className="mt-5 space-y-3">
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-800">Top sender</p>
+                <p className="mt-1 text-sm text-slate-600">
+                  {emails.length > 0 ? `Frequent updates from ${emails[0].sender}` : "Awaiting data..."}
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-800">Follow ups</p>
+                <p className="mt-1 text-sm text-slate-600">
+                  {emails.filter((item) => item.priority === "High").length} high priority messages pending
+                </p>
+              </div>
+            </div>
           </div>
         </aside>
+
       </section>
     </DashboardLayout>
   );

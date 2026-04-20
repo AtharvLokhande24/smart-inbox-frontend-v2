@@ -1,67 +1,71 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DashboardLayout from "../components/DashboardLayout";
+import { useAuth } from "../context/AuthContext";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification,
+} from "../services/api";
 import {
   HiOutlineBell,
   HiOutlineCheckCircle,
   HiOutlineExclamationCircle,
   HiOutlineInformationCircle,
+  HiOutlineMail,
   HiOutlineTrash,
 } from "react-icons/hi";
 
 function NotificationsPage() {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: "success",
-      title: "Profile Updated",
-      message: "Your profile information has been updated successfully.",
-      timestamp: "2 hours ago",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "info",
-      title: "New Email Integrated",
-      message: "Your Gmail account has been successfully integrated with Smart Inbox.",
-      timestamp: "1 day ago",
-      read: false,
-    },
-    {
-      id: 3,
-      type: "warning",
-      title: "Email Overload Alert",
-      message: "You have 50+ unread important emails. Check your inbox!",
-      timestamp: "2 days ago",
-      read: true,
-    },
-    {
-      id: 4,
-      type: "info",
-      title: "Weekly Summary Ready",
-      message: "Your weekly email summary is ready for review.",
-      timestamp: "3 days ago",
-      read: true,
-    },
-    {
-      id: 5,
-      type: "success",
-      title: "Settings Saved",
-      message: "Your preference settings have been saved successfully.",
-      timestamp: "1 week ago",
-      read: true,
-    },
-    {
-      id: 6,
-      type: "info",
-      title: "New Feature Available",
-      message: "Smart Inbox now supports email templates. Try it out!",
-      timestamp: "1 week ago",
-      read: true,
-    },
-  ]);
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadNotifications() {
+      if (!user?.id) {
+        if (isMounted) {
+          setNotifications([]);
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        if (isMounted) {
+          setLoading(true);
+        }
+        const res = await getNotifications();
+        if (isMounted) {
+          setNotifications(Array.isArray(res.data?.notifications) ? res.data.notifications : []);
+        }
+      } catch {
+        if (isMounted) {
+          setNotifications([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadNotifications();
+
+    const refreshTimer = setInterval(loadNotifications, 15000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(refreshTimer);
+    };
+  }, [user?.id]);
 
   const getIcon = (type) => {
     switch (type) {
+      case "mail_sync":
+        return <HiOutlineMail className="text-sky-600 text-2xl" />;
       case "success":
         return <HiOutlineCheckCircle className="text-emerald-500 text-2xl" />;
       case "warning":
@@ -74,15 +78,63 @@ function NotificationsPage() {
   };
 
   const handleMarkAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === id ? { ...notif, read: true } : notif
-      )
-    );
+    markNotificationAsRead(id)
+      .then(() => {
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif.id === id ? { ...notif, read: true } : notif
+          )
+        );
+      })
+      .catch(() => {});
   };
 
   const handleDelete = (id) => {
-    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
+    deleteNotification(id)
+      .then(() => {
+        setNotifications((prev) => prev.filter((notif) => notif.id !== id));
+      })
+      .catch(() => {});
+  };
+
+  const handleMarkAllAsRead = () => {
+    markAllNotificationsAsRead()
+      .then(() => {
+        setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
+      })
+      .catch(() => {});
+  };
+
+  const formatTimestamp = (value) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleString();
+  };
+
+  const renderMessage = (notification) => {
+    const message = String(notification?.message || "");
+    if (notification?.type !== "mail_sync") {
+      return <p className="mt-2 text-sm text-current">{message}</p>;
+    }
+
+    const parts = message
+      .split(". ")
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (parts.length === 0) {
+      return <p className="mt-2 text-sm text-current">{message}</p>;
+    }
+
+    return (
+      <div className="mt-2 space-y-1">
+        {parts.map((part, idx) => (
+          <p key={`${notification.id}-${idx}`} className="text-sm text-current">
+            {part}
+          </p>
+        ))}
+      </div>
+    );
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -103,7 +155,10 @@ function NotificationsPage() {
             )}
           </div>
           {unreadCount > 0 && (
-            <button className="px-4 py-2 rounded-lg bg-indigo-50 text-indigo-600 text-sm font-semibold hover:bg-indigo-100 transition">
+            <button
+              onClick={handleMarkAllAsRead}
+              className="px-4 py-2 rounded-lg bg-indigo-50 text-indigo-600 text-sm font-semibold hover:bg-indigo-100 transition"
+            >
               Mark all as read
             </button>
           )}
@@ -114,7 +169,9 @@ function NotificationsPage() {
           {notifications.length === 0 ? (
             <div className="rounded-2xl bg-white p-12 shadow-sm text-center">
               <HiOutlineBell className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-600 font-medium">No notifications yet</p>
+              <p className="text-gray-600 font-medium">
+                {loading ? "Loading notifications..." : "No notifications yet"}
+              </p>
             </div>
           ) : (
             notifications.map((notification) => (
@@ -145,17 +202,17 @@ function NotificationsPage() {
                         >
                           {notification.title}
                         </h3>
-                        <p
-                          className={`mt-2 text-sm ${
+                        <div
+                          className={`mt-2 ${
                             notification.read
                               ? "text-slate-600"
                               : "text-indigo-800"
                           }`}
                         >
-                          {notification.message}
-                        </p>
+                          {renderMessage(notification)}
+                        </div>
                         <p className="mt-3 text-xs text-slate-500">
-                          {notification.timestamp}
+                          {formatTimestamp(notification.createdAt || notification.created_at)}
                         </p>
                       </div>
 

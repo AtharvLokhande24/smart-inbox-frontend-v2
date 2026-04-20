@@ -108,6 +108,13 @@ function SettingsPage() {
     }
   }
 
+  function getMailboxUrl(provider) {
+    const normalized = String(provider || "").toLowerCase();
+    if (normalized === "gmail") return "https://mail.google.com/mail/u/0/#inbox";
+    if (normalized === "outlook") return "https://outlook.office.com/mail/";
+    return null;
+  }
+
   useEffect(() => {
     async function loadLatestAccounts() {
       if (!activeUser?.id) {
@@ -171,6 +178,7 @@ function SettingsPage() {
                 <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
               </label>
             </div>
+
           </div>
         </section>
 
@@ -265,14 +273,25 @@ function SettingsPage() {
                           <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-700">Primary</span>
                         ) : null}
                         {String(account.provider || "").toLowerCase() !== "local" ? (
-                          <button
-                            type="button"
-                            onClick={() => handleDisconnectAccount(account)}
-                            disabled={disconnectingAccountId === account.id}
-                            className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-100 transition disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {disconnectingAccountId === account.id ? "Removing..." : "Disconnect"}
-                          </button>
+                          <>
+                            {getMailboxUrl(account.provider) ? (
+                              <button
+                                type="button"
+                                onClick={() => window.open(getMailboxUrl(account.provider), "_blank", "noopener,noreferrer")}
+                                className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100 transition"
+                              >
+                                View Mail
+                              </button>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => handleDisconnectAccount(account)}
+                              disabled={disconnectingAccountId === account.id}
+                              className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-100 transition disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {disconnectingAccountId === account.id ? "Removing..." : "Disconnect"}
+                            </button>
+                          </>
                         ) : null}
                       </div>
                     </div>
@@ -285,6 +304,7 @@ function SettingsPage() {
           </div>
         </section>
       </div>
+
     </DashboardLayout>
   );
 }

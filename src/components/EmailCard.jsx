@@ -7,6 +7,7 @@ const priorityStyles = {
 };
 
 function EmailCard({
+  id,
   subject,
   sender,
   preview,
@@ -14,12 +15,20 @@ function EmailCard({
   date,
   app,
   onReply,
+  onAutoTask,
+  autoTaskBusy = false,
 }) {
   const badgeStyles = priorityStyles[priority] ?? priorityStyles.Low;
 
   const handleReply = () => {
     if (onReply) {
       onReply();
+    }
+  };
+
+  const handleAutoTask = () => {
+    if (onAutoTask && id) {
+      onAutoTask(id);
     }
   };
 
@@ -67,13 +76,24 @@ function EmailCard({
         )}
 
         {/* Reply Button - Bottom Right, Hidden by default */}
-        <button
-          type="button"
-          onClick={handleReply}
-          className="opacity-0 translate-y-1 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200 text-sm px-3 py-1 rounded-md bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          Reply
-        </button>
+        <div className="flex items-center gap-2 opacity-0 translate-y-1 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200">
+          <button
+            type="button"
+            onClick={handleAutoTask}
+            disabled={autoTaskBusy || !onAutoTask || !id}
+            className="text-sm px-3 py-1 rounded-md bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+          >
+            {autoTaskBusy ? "Adding..." : "Auto Task"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleReply}
+            className="text-sm px-3 py-1 rounded-md bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            Reply
+          </button>
+        </div>
       </div>
     </article>
   );

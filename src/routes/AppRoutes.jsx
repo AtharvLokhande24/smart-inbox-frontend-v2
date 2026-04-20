@@ -8,6 +8,7 @@ import OutlookCallbackPage from "../pages/OutlookCallbackPage";
 import Dashboard from "../pages/Dashboard";
 import GmailPage from "../pages/GmailPage";
 import OutlookPage from "../pages/OutlookPage";
+import TasksPage from "../pages/TasksPage";
 import SettingsPage from "../pages/SettingsPage";
 import ProfilePage from "../pages/ProfilePage";
 import NotificationsPage from "../pages/NotificationsPage";
@@ -60,6 +61,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/gmail" element={<ProtectedRoute><GmailPage /></ProtectedRoute>} />
         <Route path="/outlook" element={<ProtectedRoute><OutlookPage /></ProtectedRoute>} />
+        <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />

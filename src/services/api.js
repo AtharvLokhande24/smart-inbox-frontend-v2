@@ -212,6 +212,22 @@ export const editProfile = (userId, data) => {
   return api.put(`/users/profile/${userId}`, data);
 };
 
+export const getNotifications = () => {
+  return api.get("/notifications");
+};
+
+export const markNotificationAsRead = (notificationId) => {
+  return api.patch(`/notifications/${notificationId}/read`);
+};
+
+export const markAllNotificationsAsRead = () => {
+  return api.patch("/notifications/read-all");
+};
+
+export const deleteNotification = (notificationId) => {
+  return api.delete(`/notifications/${notificationId}`);
+};
+
 // ==================== Email Streaming (SSE) ====================
 
 /**

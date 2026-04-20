@@ -4,6 +4,7 @@ import {
   HiOutlineHome,
   HiOutlineMail,
   HiOutlineCog,
+  HiOutlineClipboardList,
   HiOutlineMenu,
   HiOutlineLogout,
 } from "react-icons/hi";
@@ -13,6 +14,7 @@ const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: HiOutlineHome },
   { label: "Gmail", to: "/gmail", icon: HiOutlineMail },
   { label: "Outlook", to: "/outlook", icon: HiOutlineMail },
+  { label: "Tasks", to: "/tasks", icon: HiOutlineClipboardList },
   { label: "Settings", to: "/settings", icon: HiOutlineCog },
 ];
 
@@ -103,7 +105,7 @@ function Sidebar() {
       </nav>
 
       {/* Bottom: sign out */}
-      <div className="p-4">
+      <div className="p-4 space-y-2">
         <button
           type="button"
           onClick={handleSignOut}
