@@ -1,9 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { FcGoogle } from "react-icons/fc";
-import { FaMicrosoft } from "react-icons/fa";
-import { startOAuthLogin } from "../services/oauth";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
@@ -42,36 +39,18 @@ function RegisterPage() {
     }
   };
 
-  async function handleGoogleLogin() {
-    setIsLoading(true);
-    const oauthError = await startOAuthLogin("gmail");
-    if (oauthError) {
-      setError(oauthError);
-      setIsLoading(false);
-    }
-  }
-
-  async function handleOutlookLogin() {
-    setIsLoading(true);
-    const oauthError = await startOAuthLogin("outlook");
-    if (oauthError) {
-      setError(oauthError);
-      setIsLoading(false);
-    }
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-[#050816] text-slate-100">
       <Navbar />
 
-      <div className="flex flex-1 items-center justify-center py-12 px-6 lg:px-8">
-        <div className="bg-white shadow-lg rounded-2xl p-10 w-full max-w-md">
-          <h2 className="text-2xl font-semibold mb-6 text-center">
-            Create your InboxIQ account
+      <div className="flex flex-1 items-center justify-center px-6 py-12 lg:px-8">
+        <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-950/85 p-10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+          <h2 className="mb-6 text-center text-2xl font-semibold text-slate-50">
+            Create your Smart Inbox account
           </h2>
 
           {error && (
-            <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
               {error}
             </div>
           )}
@@ -80,7 +59,7 @@ function RegisterPage() {
             <input
               type="text"
               placeholder="Full Name"
-              className="w-full mb-4 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+              className="mb-4 w-full rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-slate-50 placeholder:text-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -89,7 +68,7 @@ function RegisterPage() {
             <input
               type="email"
               placeholder="Email"
-              className="w-full mb-4 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+              className="mb-4 w-full rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-slate-50 placeholder:text-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -98,7 +77,7 @@ function RegisterPage() {
             <input
               type="password"
               placeholder="Password"
-              className="w-full mb-4 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+              className="mb-4 w-full rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-slate-50 placeholder:text-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -107,7 +86,7 @@ function RegisterPage() {
             <input
               type="password"
               placeholder="Confirm Password"
-              className="w-full mb-6 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+              className="mb-6 w-full rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-slate-50 placeholder:text-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -116,40 +95,16 @@ function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition mb-4 disabled:bg-indigo-400"
+              className="mb-4 w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3 font-medium text-white transition hover:from-indigo-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isLoading ? "Creating account..." : "Register"}
             </button>
           </form>
 
-          <p className="mb-5 text-sm text-slate-600 text-center">
-            You can also start with Google or Outlook and link more inboxes later.
-          </p>
-
-          <button 
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 mb-3 hover:bg-gray-50 transition disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            <FcGoogle size={20} />
-            {isLoading ? "Redirecting..." : "Continue with Google"}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleOutlookLogin}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 mb-3 hover:bg-gray-50 transition disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            <FaMicrosoft size={18} className="text-blue-600" />
-            {isLoading ? "Redirecting..." : "Continue with Outlook"}
-          </button>
-
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <p className="mt-6 text-center text-sm text-slate-300">
             Already have an account?{" "}
-            <Link to="/login" className="text-indigo-600 font-medium hover:underline">
-              Login
+            <Link to="/login" className="font-medium text-indigo-300 hover:text-indigo-200 hover:underline">
+              Sign in
             </Link>
           </p>
         </div>

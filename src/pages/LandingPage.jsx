@@ -157,7 +157,7 @@ function LandingPage() {
             Features
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-gradient-to-tr from-indigo-50 to-indigo-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition">
               <h3 className="text-xl font-semibold mb-3 text-gray-900">
                 AI Priority Detection
@@ -165,15 +165,6 @@ function LandingPage() {
               <p className="text-gray-600">
                 Let smart algorithms determine what matters most so you don’t
                 have to.
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-tr from-green-50 to-green-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition">
-              <h3 className="text-xl font-semibold mb-3 text-gray-900">
-                Smart Summary
-              </h3>
-              <p className="text-gray-600">
-                Quick overviews of long email threads to save you time.
               </p>
             </div>
 
@@ -233,7 +224,6 @@ function LandingPage() {
               <ul>
                 <li><a href="#" className="block mb-2 hover:text-white transition">Features</a></li>
                 <li><a href="#" className="block mb-2 hover:text-white transition">AI Priority Detection</a></li>
-                <li><a href="#" className="block mb-2 hover:text-white transition">Smart Summary</a></li>
                 <li><a href="#" className="block mb-2 hover:text-white transition">Gmail Integration</a></li>
               </ul>
             </div>

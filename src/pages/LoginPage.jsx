@@ -58,17 +58,17 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#050816] text-slate-100">
       <Navbar />
 
-      <div className="flex flex-1 items-center justify-center py-12 px-4">
-        <div className="bg-white shadow-lg rounded-2xl p-10 w-full max-w-md">
-          <h2 className="text-2xl font-semibold mb-6 text-center">
-            Sign in to InboxIQ
+      <div className="flex flex-1 items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-950/85 p-10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+          <h2 className="mb-6 text-center text-2xl font-semibold text-slate-50">
+            Sign in to Smart Inbox
           </h2>
 
           {error && (
-            <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
               {error}
             </div>
           )}
@@ -77,7 +77,7 @@ function LoginPage() {
             <input
               type="email"
               placeholder="Email"
-              className="w-full mb-4 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+              className="mb-4 w-full rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-slate-50 placeholder:text-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -86,7 +86,7 @@ function LoginPage() {
             <input
               type="password"
               placeholder="Password"
-              className="w-full mb-6 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+              className="mb-6 w-full rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-slate-50 placeholder:text-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -95,13 +95,13 @@ function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition disabled:bg-indigo-400"
+              className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3 font-medium text-white transition hover:from-indigo-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isLoading ? "Logging in..." : "Login"}
             </button>
           </form>
 
-          <p className="my-5 text-sm text-slate-600 text-center">
+          <p className="my-5 text-center text-sm text-slate-300">
             You can also sign in with any Gmail or Outlook account linked to your profile.
           </p>
 
@@ -109,7 +109,7 @@ function LoginPage() {
             onClick={handleGoogleLogin}
             type="button"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition disabled:opacity-70 disabled:cursor-not-allowed"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 py-3 text-slate-100 transition hover:border-slate-500 hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-70"
           >
             <FcGoogle size={20} /> {isLoading ? "Redirecting..." : "Continue with Google"}
           </button>
@@ -118,15 +118,15 @@ function LoginPage() {
             onClick={handleOutlookLogin}
             type="button"
             disabled={isLoading}
-            className="mt-3 w-full flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition disabled:opacity-70 disabled:cursor-not-allowed"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 py-3 text-slate-100 transition hover:border-slate-500 hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-70"
           >
             <FaMicrosoft size={18} className="text-blue-600" /> {isLoading ? "Redirecting..." : "Continue with Outlook"}
           </button>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <p className="mt-6 text-center text-sm text-slate-300">
             New here?{' '}
-            <Link to="/register" className="text-indigo-600 font-medium hover:underline">
-              Create account with Google
+            <Link to="/register" className="font-medium text-indigo-300 hover:text-indigo-200 hover:underline">
+              Create account
             </Link>
           </p>
         </div>

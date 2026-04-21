@@ -19,12 +19,11 @@ function normalizeBaseUrl(value) {
 }
 
 const envBaseUrl = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL);
-const DEFAULT_API_BASE_URL = envBaseUrl || "http://13.126.247.135/api";
+const DEFAULT_API_BASE_URL = envBaseUrl || "http://localhost:5000";
 const API_BASE_URL_CANDIDATES = Array.from(
   new Set(
     [
       DEFAULT_API_BASE_URL,
-      normalizeBaseUrl("http://13.126.247.135/api"),
       normalizeBaseUrl("http://localhost:5000"),
     ].filter(Boolean)
   )

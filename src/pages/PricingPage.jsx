@@ -8,151 +8,133 @@ const PricingPage = () => {
   const price = (monthly) => (yearly ? monthly * 10 : monthly);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-
+    <div className="min-h-screen bg-[#050816] text-slate-100">
       <Navbar />
+      <main className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.26),_transparent_32%),radial-gradient(circle_at_80%_15%,_rgba(168,85,247,0.18),_transparent_28%),linear-gradient(to_bottom,_rgba(2,6,23,0),_rgba(2,6,23,0.7))]" />
 
-      {/* HERO */}
-      <div className="text-center pt-20">
-        <h1 className="text-5xl font-bold text-gray-900">
-          Pricing that scales with you 
-        </h1>
-        <p className="mt-4 text-gray-600">
-          Choose a plan and boost your productivity.
-        </p>
-
-        {/* TOGGLE */}
-        <div className="flex justify-center mt-8">
-          <div className="bg-gray-200 rounded-full p-1 flex">
-            <button
-              onClick={() => setYearly(false)}
-              className={`px-4 py-2 rounded-full ${
-                !yearly ? "bg-white shadow" : ""
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setYearly(true)}
-              className={`px-4 py-2 rounded-full ${
-                yearly ? "bg-white shadow" : ""
-              }`}
-            >
-              Yearly (Save 20%)
-            </button>
+        {/* HERO */}
+        <section className="relative max-w-6xl mx-auto px-6 pt-20 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-indigo-300 shadow-lg shadow-black/20">
+            Simple pricing
           </div>
-        </div>
-      </div>
 
-      {/* PRICING CARDS */}
-      <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 mt-16 px-6">
-
-        {/* FREE */}
-        <div className="bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-          <h2 className="text-xl font-semibold">Free</h2>
-          <p className="text-3xl font-bold mt-4">₹0</p>
-          <ul className="mt-6 space-y-2 text-gray-600">
-            <li>✔ Basic AI prioritization</li>
-            <li>✔ Gmail integration</li>
-          </ul>
-          <button className="mt-6 w-full py-2 bg-gray-200 rounded-lg">
-            Get Started
-          </button>
-        </div>
-
-        {/* PRO */}
-        <div className="bg-white p-8 rounded-2xl shadow-2xl border-2 border-indigo-500 scale-105 relative hover:-translate-y-2 transition-all duration-300">
-          <span className="absolute top-3 right-3 text-xs bg-indigo-600 text-white px-2 py-1 rounded-full">
-            Most Popular
-          </span>
-
-          <h2 className="text-xl font-semibold">Pro</h2>
-          <p className="text-3xl font-bold mt-4">
-            ₹{price(499)}{yearly ? "/yr" : "/mo"}
+          <h1 className="mt-6 text-5xl font-semibold tracking-tight text-slate-50 sm:text-6xl">
+            Pricing that scales with your inbox
+          </h1>
+          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300">
+            Choose a plan that matches your workflow. Everything is tuned for a dark interface, fast scanning, and minimal distraction.
           </p>
 
-          <ul className="mt-6 space-y-2 text-gray-600">
-            <li>✔ Advanced AI insights</li>
-            <li>✔ Smart summaries</li>
-            <li>✔ Priority alerts</li>
-          </ul>
+          {/* TOGGLE */}
+          <div className="mt-10 flex justify-center">
+            <div className="inline-flex rounded-full border border-slate-800 bg-slate-900/80 p-1 shadow-lg shadow-black/20">
+              <button
+                onClick={() => setYearly(false)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  !yearly ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/30" : "text-slate-300 hover:text-slate-100"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setYearly(true)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  yearly ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/30" : "text-slate-300 hover:text-slate-100"
+                }`}
+              >
+                Yearly save 20%
+              </button>
+            </div>
+          </div>
+        </section>
 
-          <button className="mt-6 w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-            Upgrade
-          </button>
-        </div>
+        {/* PRICING CARDS */}
+        <section className="relative max-w-6xl mx-auto grid gap-8 px-6 pt-16 md:grid-cols-3">
+          <article className="rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-slate-700">
+            <h2 className="text-xl font-semibold text-slate-50">Free</h2>
+            <p className="mt-4 text-4xl font-semibold text-slate-50">₹0</p>
+            <ul className="mt-6 space-y-3 text-slate-300">
+              <li>Basic AI prioritization</li>
+              <li>Gmail integration</li>
+            </ul>
+            <button className="mt-8 w-full rounded-xl border border-slate-700 bg-slate-950/60 py-3 font-medium text-slate-100 transition hover:border-indigo-500/50 hover:bg-slate-900">
+              Get Started
+            </button>
+          </article>
 
-        {/* ENTERPRISE */}
-        <div className="bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-          <h2 className="text-xl font-semibold">Enterprise</h2>
-          <p className="text-3xl font-bold mt-4">Custom</p>
-          <ul className="mt-6 space-y-2 text-gray-600">
-            <li>✔ Team collaboration</li>
-            <li>✔ Custom AI models</li>
-          </ul>
-          <button className="mt-6 w-full py-2 bg-gray-900 text-white rounded-lg">
-            Contact Us
-          </button>
-        </div>
+          <article className="relative rounded-3xl border border-indigo-500/60 bg-gradient-to-b from-slate-900 to-slate-950 p-8 shadow-[0_30px_80px_rgba(0,0,0,0.45)] shadow-indigo-950/20 transition duration-300 hover:-translate-y-1">
+            <span className="absolute right-4 top-4 rounded-full border border-indigo-400/40 bg-indigo-500/15 px-3 py-1 text-xs font-semibold text-indigo-200">
+              Most popular
+            </span>
+            <h2 className="text-xl font-semibold text-slate-50">Pro</h2>
+            <p className="mt-4 text-4xl font-semibold text-slate-50">
+              ₹{price(499)}<span className="text-base font-medium text-slate-400">{yearly ? "/yr" : "/mo"}</span>
+            </p>
+            <ul className="mt-6 space-y-3 text-slate-300">
+              <li>Advanced AI insights</li>
+              <li>Smart summaries</li>
+              <li>Priority alerts</li>
+            </ul>
+            <button className="mt-8 w-full rounded-xl bg-indigo-500 py-3 font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:bg-indigo-400">
+              Upgrade
+            </button>
+          </article>
 
-      </div>
+          <article className="rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-slate-700">
+            <h2 className="text-xl font-semibold text-slate-50">Enterprise</h2>
+            <p className="mt-4 text-4xl font-semibold text-slate-50">Custom</p>
+            <ul className="mt-6 space-y-3 text-slate-300">
+              <li>Team collaboration</li>
+              <li>Custom AI models</li>
+            </ul>
+            <button className="mt-8 w-full rounded-xl border border-slate-700 bg-slate-950/60 py-3 font-medium text-slate-100 transition hover:border-indigo-500/50 hover:bg-slate-900">
+              Contact Us
+            </button>
+          </article>
+        </section>
 
-      
-      {/* FEATURE COMPARISON */}
-      <div className="max-w-6xl mx-auto mt-24 px-6 pb-20">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          Compare Plans
-        </h2>
+        {/* FEATURE COMPARISON */}
+        <section className="relative max-w-6xl mx-auto px-6 pb-24 pt-20">
+          <h2 className="text-center text-3xl font-semibold text-slate-50">
+            Compare plans
+          </h2>
 
-        <div className="overflow-hidden rounded-2xl shadow-lg border border-gray-200">
-          <table className="w-full text-sm text-left">
+          <div className="mt-10 overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/80 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-800 bg-slate-950/80 text-slate-200">
+                <tr>
+                  <th className="p-5 font-semibold">Features</th>
+                  <th className="p-5 text-center font-semibold">Free</th>
+                  <th className="p-5 text-center font-semibold text-indigo-200">Pro</th>
+                  <th className="p-5 text-center font-semibold">Enterprise</th>
+                </tr>
+              </thead>
 
-            <thead className="bg-gradient-to-r from-indigo-50 to-purple-50 text-gray-700">
-              <tr>
-                <th className="p-5 font-semibold">Features</th>
-                <th className="text-center">Free</th>
-                <th className="text-center bg-indigo-50 text-indigo-600">Pro </th>
-                <th className="text-center">Enterprise</th>
-              </tr>
-            </thead>
+              <tbody className="text-slate-300">
+                <tr className="border-b border-slate-800/80 hover:bg-white/5">
+                  <td className="p-5 font-medium text-slate-100">
+                    AI prioritization
+                    <p className="mt-1 text-xs text-slate-400">Rank emails automatically</p>
+                  </td>
+                  <td className="p-5 text-center text-emerald-400"><HiCheck className="mx-auto" /></td>
+                  <td className="bg-indigo-500/10 p-5 text-center text-emerald-400"><HiCheck className="mx-auto" /></td>
+                  <td className="p-5 text-center text-emerald-400"><HiCheck className="mx-auto" /></td>
+                </tr>
 
-            <tbody className="bg-white">
-
-              <tr className="border-t hover:bg-gray-50">
-                <td className="p-5 font-medium">
-                  AI Prioritization
-                  <p className="text-xs text-gray-500">Rank emails automatically</p>
-                </td>
-                <td className="text-center text-green-600"><HiCheck className="mx-auto" /></td>
-                <td className="text-center text-green-600 bg-indigo-50"><HiCheck className="mx-auto" /></td>
-                <td className="text-center text-green-600"><HiCheck className="mx-auto" /></td>
-              </tr>
-
-              <tr className="border-t hover:bg-gray-50">
-                <td className="p-5 font-medium">
-                  Smart Summary
-                  <p className="text-xs text-gray-500">AI summaries</p>
-                </td>
-                <td className="text-center text-gray-400"><HiX className="mx-auto" /></td>
-                <td className="text-center text-green-600 bg-indigo-50"><HiCheck className="mx-auto" /></td>
-                <td className="text-center text-green-600"><HiCheck className="mx-auto" /></td>
-              </tr>
-
-              <tr className="border-t hover:bg-gray-50">
-                <td className="p-5 font-medium">
-                  Team Collaboration
-                </td>
-                <td className="text-center text-gray-400"><HiX className="mx-auto" /></td>
-                <td className="text-center text-gray-400 bg-indigo-50"><HiX className="mx-auto" /></td>
-                <td className="text-center text-green-600"><HiCheck className="mx-auto" /></td>
-              </tr>
-
-            </tbody>
-
-          </table>
-        </div>
-      </div>
-
+                <tr className="hover:bg-white/5">
+                  <td className="p-5 font-medium text-slate-100">
+                    Team collaboration
+                  </td>
+                  <td className="p-5 text-center text-slate-500"><HiX className="mx-auto" /></td>
+                  <td className="bg-indigo-500/10 p-5 text-center text-slate-500"><HiX className="mx-auto" /></td>
+                  <td className="p-5 text-center text-emerald-400"><HiCheck className="mx-auto" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
     </div>
   );
 };
